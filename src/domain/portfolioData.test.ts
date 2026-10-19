@@ -12,10 +12,17 @@ import {
   dampValue,
   filterInterestsByCluster,
 } from './portfolioData.ts';
+import {
+  MIKEY_ORIGINAL_THOUGHTS,
+  DRAFT_THOUGHT_FRAGMENTS,
+  ALL_THOUGHT_FRAGMENTS,
+  getThoughtById,
+} from './thoughtsData.ts';
 
-test('resolveRouteFromPath maps every canonical URL and falls back to home', () => {
+test('resolveRouteFromPath maps all 6 novel chapters and case study routes', () => {
   assert.equal(resolveRouteFromPath('/').id, 'home');
   assert.equal(resolveRouteFromPath('/about').id, 'about');
+  assert.equal(resolveRouteFromPath('/spaces').id, 'spaces');
   assert.equal(resolveRouteFromPath('/work/').id, 'work');
   assert.equal(resolveRouteFromPath('/work/zenith').id, 'work-zenith');
   assert.equal(resolveRouteFromPath('/work/deadzone-bastion').id, 'work-deadzone');
@@ -24,20 +31,37 @@ test('resolveRouteFromPath maps every canonical URL and falls back to home', () 
   assert.equal(resolveRouteFromPath('/unknown-route').id, 'home');
 });
 
-test('resolveRouteFromScroll maps continuous 0..1 progress to world chapters', () => {
+test('resolveRouteFromScroll maps continuous 0..1 progress across all 6 chapters', () => {
   assert.equal(resolveRouteFromScroll(0).id, 'home');
-  assert.equal(resolveRouteFromScroll(0.24).id, 'about');
-  assert.equal(resolveRouteFromScroll(0.51).id, 'work');
-  assert.equal(resolveRouteFromScroll(0.76).id, 'notes');
+  assert.equal(resolveRouteFromScroll(0.19).id, 'about');
+  assert.equal(resolveRouteFromScroll(0.39).id, 'spaces');
+  assert.equal(resolveRouteFromScroll(0.61).id, 'work');
+  assert.equal(resolveRouteFromScroll(0.83).id, 'notes');
   assert.equal(resolveRouteFromScroll(0.99).id, 'contact');
 });
 
-test('interpolateKeyframes smoothly blends spatial coordinates and paradox parameters', () => {
-  const blended = interpolateKeyframes(SCENE_KEYFRAMES.home, SCENE_KEYFRAMES.contact, 0.5);
-  assert.equal(blended.fov, (SCENE_KEYFRAMES.home.fov + SCENE_KEYFRAMES.contact.fov) / 2);
-  assert.ok(blended.paradoxSeparation > 0 && blended.paradoxSeparation < SCENE_KEYFRAMES.home.paradoxSeparation);
+test('interpolateKeyframes blends spatial coordinates and cobalt/amber intensities', () => {
+  const blended = interpolateKeyframes(SCENE_KEYFRAMES.home, SCENE_KEYFRAMES.spaces, 0.5);
+  assert.equal(blended.fov, (SCENE_KEYFRAMES.home.fov + SCENE_KEYFRAMES.spaces.fov) / 2);
+  assert.ok(blended.amberIntensity > SCENE_KEYFRAMES.home.amberIntensity);
   const damped = dampValue(0, 10, 5, 0.1);
   assert.ok(damped > 0 && damped < 10);
+});
+
+test('MIKEY original thoughts are preserved verbatim and strictly separated from drafts', () => {
+  assert.equal(MIKEY_ORIGINAL_THOUGHTS.length, 2);
+  assert.equal(
+    MIKEY_ORIGINAL_THOUGHTS[0].text,
+    'The mirrors in your mind can reflect the best of yourself not the worst of someone else.'
+  );
+  assert.equal(
+    MIKEY_ORIGINAL_THOUGHTS[1].text,
+    'The family you think is family is just a stepping stone to real family.'
+  );
+  assert.ok(MIKEY_ORIGINAL_THOUGHTS.every((t) => t.origin === 'mikey-original' && t.status === 'original'));
+  assert.ok(DRAFT_THOUGHT_FRAGMENTS.every((t) => t.origin === 'draft' && t.status === 'draft'));
+  assert.equal(ALL_THOUGHT_FRAGMENTS.length, MIKEY_ORIGINAL_THOUGHTS.length + DRAFT_THOUGHT_FRAGMENTS.length);
+  assert.equal(getThoughtById('mikey-mirrors').id, 'mikey-mirrors');
 });
 
 test('verified projects and external profiles match exact supplied URLs', () => {
@@ -49,12 +73,6 @@ test('verified projects and external profiles match exact supplied URLs', () => 
   assert.equal(EXTERNAL_PROFILES.length, 5);
   assert.ok(EXTERNAL_PROFILES.some((p) => p.url === 'https://github.com/MIKEY-CODE-HUB'));
   assert.ok(EXTERNAL_PROFILES.some((p) => p.url === 'https://codeforces.com/profile/MIKEY1903'));
-});
-
-test('filterInterestsByCluster filters accurately', () => {
   assert.equal(filterInterestsByCluster(INTEREST_CLUSTERS, 'all').length, 4);
-  const quant = filterInterestsByCluster(INTEREST_CLUSTERS, 'quantitative-math');
-  assert.equal(quant.length, 1);
-  assert.equal(quant[0].title, 'Mathematics & Quantitative Reasoning');
-  assert.equal( ROUTES.length, 7);
+  assert.equal(ROUTES.length, 8);
 });

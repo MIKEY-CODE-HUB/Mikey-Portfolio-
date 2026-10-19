@@ -6,6 +6,7 @@ import {
   SCENE_KEYFRAMES,
   dampValue,
 } from '../domain/portfolioData';
+import { AccentTone } from '../domain/thoughtsData';
 import { createProceduralTextures } from './proceduralTextures';
 import {
   createSignatureImpossibleObject,
@@ -18,7 +19,7 @@ import { createProjectArtifacts } from './projectArtifacts';
 const _targetCamPos = new THREE.Vector3();
 const _currentCamPos = new THREE.Vector3(0, 1.8, 12.5);
 const _targetLookAt = new THREE.Vector3();
-const _currentLookAt = new THREE.Vector3(0, 1.1, 0);
+const _currentLookAt = new THREE.Vector3(0, 1.2, 0);
 const _dummyObj = new THREE.Object3D();
 const _instanceColor = new THREE.Color();
 
@@ -30,6 +31,9 @@ export interface WorldCanvasProps {
   cameraPreset: 'narrative' | 'isometric' | 'elevation';
   reducedMotion: boolean;
   hoveredProjectId: string | null;
+  activeThoughtAccent: AccentTone | null;
+  stayingWithThought: boolean;
+  thoughtCameraOffset: [number, number, number];
   onNavigateRoute: (path: string) => void;
   onInspectSignature: () => void;
 }
@@ -42,13 +46,15 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
   cameraPreset,
   reducedMotion,
   hoveredProjectId,
+  activeThoughtAccent,
+  stayingWithThought,
+  thoughtCameraOffset,
   onNavigateRoute,
   onInspectSignature,
 }) => {
   const canvasMountRef = useRef<HTMLDivElement | null>(null);
   const [webglAvailable, setWebglAvailable] = useState<boolean>(true);
 
-  // Store mutable props in ref so WebGL loop reads latest state without re-mounting
   const stateRef = useRef({
     activeRouteId,
     scrollProgress,
@@ -57,6 +63,9 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     cameraPreset,
     reducedMotion,
     hoveredProjectId,
+    activeThoughtAccent,
+    stayingWithThought,
+    thoughtCameraOffset,
     onNavigateRoute,
     onInspectSignature,
   });
@@ -70,6 +79,9 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
       cameraPreset,
       reducedMotion,
       hoveredProjectId,
+      activeThoughtAccent,
+      stayingWithThought,
+      thoughtCameraOffset,
       onNavigateRoute,
       onInspectSignature,
     };
@@ -81,6 +93,9 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     cameraPreset,
     reducedMotion,
     hoveredProjectId,
+    activeThoughtAccent,
+    stayingWithThought,
+    thoughtCameraOffset,
     onNavigateRoute,
     onInspectSignature,
   ]);
@@ -121,7 +136,6 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     scene.background = new THREE.Color(0x111210);
     scene.fog = new THREE.FogExp2(0x111210, 0.036);
 
-    // Studio PBR environment reflection via RoomEnvironment + PMREMGenerator
     let envTexture: THREE.Texture | null = null;
     if (!isHeadless) {
       const pmremGenerator = new THREE.PMREMGenerator(renderer);
@@ -142,7 +156,7 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     camera.position.copy(_currentCamPos);
     camera.lookAt(_currentLookAt);
 
-    // Studio 3-point warm/cool lighting rig
+    // Studio 3-point warm/cool lighting rig + subtle Cobalt & Amber accent point lights
     const hemiLight = new THREE.HemisphereLight(
       0xdde2e6,
       0x181917,
@@ -151,7 +165,7 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     hemiLight.position.set(0, 25, 0);
     scene.add(hemiLight);
 
-    const keyLight = new THREE.DirectionalLight(0xf8f2e6, 1.9);
+    const keyLight = new THREE.DirectionalLight(0xf8f2e6, 1.85);
     keyLight.position.set(7, 13, 8);
     keyLight.castShadow = !isHeadless;
     keyLight.shadow.mapSize.width = 1024;
@@ -167,14 +181,22 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     keyLight.shadow.normalBias = 0.02;
     scene.add(keyLight);
 
-    const rimLight = new THREE.DirectionalLight(0xb8c0c8, 0.85);
+    const rimLight = new THREE.DirectionalLight(0x526bff, 0.65);
     rimLight.position.set(-8, 6, -9);
     scene.add(rimLight);
+
+    const amberAccentLight = new THREE.PointLight(0xf0a65a, 0.8, 18, 2);
+    amberAccentLight.position.set(3.5, 3.2, 2.0);
+    scene.add(amberAccentLight);
+
+    const cobaltAccentLight = new THREE.PointLight(0x526bff, 0.8, 18, 2);
+    cobaltAccentLight.position.set(-3.5, 2.8, 2.0);
+    scene.add(cobaltAccentLight);
 
     // Procedural textures
     const textures = createProceduralTextures(renderer);
 
-    // Architectural ground datum floor (offset safely at y = 0)
+    // Architectural ground datum floor
     const floorGeo = new THREE.PlaneGeometry(80, 80);
     const floorMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
@@ -210,6 +232,7 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     scene.add(projectArtifacts.group);
 
     // 4. InstancedMesh: 48 Architectural Shelf / Coordinate Pillars
+    // Placed in two flanking colonnades so the central camera sightline is 100% unobstructed
     const pillarCount = 48;
     const pillarGeo = new THREE.BoxGeometry(0.18, 2.6, 0.42);
     const pillarMat = new THREE.MeshStandardMaterial({
@@ -234,8 +257,6 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     }> = [];
 
     for (let i = 0; i < pillarCount; i++) {
-      // Place pillars in two flanking architectural colonnades + deep horizon arc
-      // so the central camera sightline (|x| < 6.2, z > -4.5) is 100% unobstructed
       const side = i % 2 === 0 ? -1 : 1;
       const row = Math.floor(i / 2);
       const spreadX = 6.8 + (row % 4) * 2.4;
@@ -253,8 +274,15 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
       _dummyObj.updateMatrix();
       instancedPillars.setMatrixAt(i, _dummyObj.matrix);
 
-      const shade = 0.22 + ((i * 23) % 55) / 100;
-      _instanceColor.setRGB(shade, shade, shade * 0.96);
+      // Occasional subtle Cobalt or Amber reflection on select distant shelves
+      if (i % 11 === 0) {
+        _instanceColor.setHex(0x526bff);
+      } else if (i % 13 === 0) {
+        _instanceColor.setHex(0xf0a65a);
+      } else {
+        const shade = 0.22 + ((i * 23) % 55) / 100;
+        _instanceColor.setRGB(shade, shade, shade * 0.96);
+      }
       instancedPillars.setColorAt(i, _instanceColor);
     }
     instancedPillars.instanceMatrix.needsUpdate = true;
@@ -269,7 +297,6 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
       renderer.compile(scene, camera);
     }
 
-    // Pointer parallax & throttled raycasting
     const pointer = { x: 0, y: 0 };
     const raycaster = new THREE.Raycaster();
     const mouseVec = new THREE.Vector2();
@@ -331,7 +358,6 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     renderer.domElement.addEventListener('click', handleCanvasClick);
     window.addEventListener('resize', handleResize);
 
-    // Animation loop with exponential damping (using performance.now() to avoid THREE.Clock deprecation)
     const startTimeMs = performance.now();
     let prevTimeMs = startTimeMs;
     let animFrameId = 0;
@@ -345,9 +371,11 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     let dampedSigPosY = 1.35;
     let dampedSigPosZ = -1.2;
     let dampedParadox = 0.18;
-    let dampedWireframe = 0.08;
+    let dampedWireframe = 0.12;
     let dampedGridElev = 0.0;
     let dampedHover = 0;
+    let dampedCobalt = 0.55;
+    let dampedAmber = 0.12;
 
     const animate = () => {
       animFrameId = requestAnimationFrame(animate);
@@ -360,9 +388,12 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
         cameraPreset: cPreset,
         reducedMotion: rMotion,
         hoveredProjectId: hProjId,
+        activeThoughtAccent: tAccent,
+        stayingWithThought: stayThought,
+        thoughtCameraOffset: tCamOffset,
       } = stateRef.current;
 
-      const currentStateKey = `${routeId}|${scrollProg.toFixed(2)}|${pOverride}|${fMode}|${cPreset}|${rMotion}|${hProjId}`;
+      const currentStateKey = `${routeId}|${scrollProg.toFixed(2)}|${pOverride}|${fMode}|${cPreset}|${rMotion}|${hProjId}|${tAccent}|${stayThought}|${tCamOffset.join(',')}`;
       if (currentStateKey !== lastStateKey) {
         lastStateKey = currentStateKey;
         headlessFramesRemaining = 2;
@@ -385,9 +416,12 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
       const isMobile = window.innerWidth < 768;
       const mobileZOffset = isMobile ? 2.8 : 0;
 
-      let targetX = keyframe.position[0];
-      let targetY = keyframe.position[1];
-      let targetZ = keyframe.position[2] + mobileZOffset;
+      let targetX = keyframe.position[0] + (routeId === 'spaces' ? tCamOffset[0] : 0);
+      let targetY = keyframe.position[1] + (routeId === 'spaces' ? tCamOffset[1] : 0);
+      let targetZ =
+        keyframe.position[2] +
+        mobileZOffset +
+        (routeId === 'spaces' ? tCamOffset[2] : 0);
 
       if (cPreset === 'isometric') {
         targetX = 8.2;
@@ -399,8 +433,10 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
         targetZ = 8.4 + mobileZOffset;
       }
 
-      const parallaxX = !rMotion && !isHeadless && !isMobile ? pointer.x * 0.45 : 0;
-      const parallaxY = !rMotion && !isHeadless && !isMobile ? pointer.y * 0.28 : 0;
+      const parallaxX =
+        !rMotion && !isHeadless && !isMobile ? pointer.x * 0.45 : 0;
+      const parallaxY =
+        !rMotion && !isHeadless && !isMobile ? pointer.y * 0.28 : 0;
 
       _targetCamPos.set(targetX + parallaxX, targetY + parallaxY, targetZ);
       _targetLookAt.set(
@@ -419,49 +455,101 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
       camera.lookAt(_currentLookAt);
 
       if (Math.abs(camera.fov - keyframe.fov) > 0.05) {
-        camera.fov = isHeadless ? keyframe.fov : dampValue(camera.fov, keyframe.fov, lambda, dt);
+        camera.fov = isHeadless
+          ? keyframe.fov
+          : dampValue(camera.fov, keyframe.fov, lambda, dt);
         camera.updateProjectionMatrix();
       }
 
-      dampedSigScale = isHeadless ? keyframe.signatureScale : dampValue(dampedSigScale, keyframe.signatureScale, lambda, dt);
-      dampedSigRotX = isHeadless ? keyframe.signatureRotation[0] : dampValue(dampedSigRotX, keyframe.signatureRotation[0], lambda, dt);
-      dampedSigRotY = isHeadless ? keyframe.signatureRotation[1] : dampValue(dampedSigRotY, keyframe.signatureRotation[1], lambda, dt);
-      dampedSigRotZ = isHeadless ? keyframe.signatureRotation[2] : dampValue(dampedSigRotZ, keyframe.signatureRotation[2], lambda, dt);
-      dampedSigPosX = isHeadless ? keyframe.signaturePosition[0] : dampValue(dampedSigPosX, keyframe.signaturePosition[0], lambda, dt);
-      dampedSigPosY = isHeadless ? keyframe.signaturePosition[1] : dampValue(dampedSigPosY, keyframe.signaturePosition[1], lambda, dt);
-      dampedSigPosZ = isHeadless ? keyframe.signaturePosition[2] : dampValue(dampedSigPosZ, keyframe.signaturePosition[2], lambda, dt);
+      // Compute Cobalt & Amber accent intensities based on narrative chapter & active thought
+      let targetCobalt = keyframe.cobaltIntensity;
+      let targetAmber = keyframe.amberIntensity;
+      if (tAccent === 'cobalt') {
+        targetCobalt = stayThought ? 1.0 : 0.85;
+        targetAmber = 0.2;
+      } else if (tAccent === 'amber') {
+        targetAmber = stayThought ? 1.0 : 0.88;
+        targetCobalt = 0.2;
+      }
+
+      dampedCobalt = isHeadless
+        ? targetCobalt
+        : dampValue(dampedCobalt, targetCobalt, lambda, dt);
+      dampedAmber = isHeadless
+        ? targetAmber
+        : dampValue(dampedAmber, targetAmber, lambda, dt);
+
+      cobaltAccentLight.intensity = 0.35 + dampedCobalt * 1.1;
+      amberAccentLight.intensity = 0.35 + dampedAmber * 1.1;
+
+      dampedSigScale = isHeadless
+        ? keyframe.signatureScale
+        : dampValue(dampedSigScale, keyframe.signatureScale, lambda, dt);
+      dampedSigRotX = isHeadless
+        ? keyframe.signatureRotation[0]
+        : dampValue(dampedSigRotX, keyframe.signatureRotation[0], lambda, dt);
+      dampedSigRotY = isHeadless
+        ? keyframe.signatureRotation[1]
+        : dampValue(dampedSigRotY, keyframe.signatureRotation[1], lambda, dt);
+      dampedSigRotZ = isHeadless
+        ? keyframe.signatureRotation[2]
+        : dampValue(dampedSigRotZ, keyframe.signatureRotation[2], lambda, dt);
+      dampedSigPosX = isHeadless
+        ? keyframe.signaturePosition[0]
+        : dampValue(dampedSigPosX, keyframe.signaturePosition[0], lambda, dt);
+      dampedSigPosY = isHeadless
+        ? keyframe.signaturePosition[1]
+        : dampValue(dampedSigPosY, keyframe.signaturePosition[1], lambda, dt);
+      dampedSigPosZ = isHeadless
+        ? keyframe.signaturePosition[2]
+        : dampValue(dampedSigPosZ, keyframe.signaturePosition[2], lambda, dt);
 
       const targetParadox =
         pOverride !== null ? pOverride : keyframe.paradoxSeparation;
-      dampedParadox = isHeadless ? targetParadox : dampValue(dampedParadox, targetParadox, lambda, dt);
-      dampedWireframe = isHeadless ? keyframe.wireframeMix : dampValue(dampedWireframe, keyframe.wireframeMix, lambda, dt);
-      dampedGridElev = isHeadless ? keyframe.gridElevation : dampValue(dampedGridElev, keyframe.gridElevation, lambda, dt);
-      dampedHover = isHeadless ? (isHoveringSignature ? 1 : 0) : dampValue(dampedHover, isHoveringSignature ? 1 : 0, 8, dt);
+      dampedParadox = isHeadless
+        ? targetParadox
+        : dampValue(dampedParadox, targetParadox, lambda, dt);
+      dampedWireframe = isHeadless
+        ? keyframe.wireframeMix
+        : dampValue(dampedWireframe, keyframe.wireframeMix, lambda, dt);
+      dampedGridElev = isHeadless
+        ? keyframe.gridElevation
+        : dampValue(dampedGridElev, keyframe.gridElevation, lambda, dt);
+      dampedHover = isHeadless
+        ? isHoveringSignature
+          ? 1
+          : 0
+        : dampValue(dampedHover, isHoveringSignature ? 1 : 0, 8, dt);
+
+      // Slow motion down to near-stillness when visitor chooses to "Stay with this thought"
+      const motionScale = stayThought ? 0.15 : 1.0;
 
       signatureObj.group.scale.setScalar(dampedSigScale);
       signatureObj.group.position.set(
         dampedSigPosX,
-        dampedSigPosY + Math.sin(elapsed * 0.45) * 0.04,
+        dampedSigPosY + Math.sin(elapsed * 0.45 * motionScale) * 0.04,
         dampedSigPosZ
       );
       signatureObj.group.rotation.set(
         dampedSigRotX,
-        dampedSigRotY + elapsed * 0.04,
+        dampedSigRotY + elapsed * 0.04 * motionScale,
         dampedSigRotZ
       );
 
       signatureObj.updateState({
-        elapsed,
+        elapsed: elapsed * motionScale,
         paradoxSeparation: dampedParadox,
         wireframeMix: dampedWireframe,
         finishMode: fMode,
         hoverIntensity: dampedHover,
+        cobaltIntensity: dampedCobalt,
+        amberIntensity: dampedAmber,
       });
 
-      wordmark.updateState(scrollProg, elapsed);
+      wordmark.updateState(scrollProg, elapsed * motionScale);
 
       projectArtifacts.updateState({
-        elapsed,
+        elapsed: elapsed * motionScale,
         scrollProgress: scrollProg,
         activeRouteId: routeId,
         hoveredProjectId: hProjId,
@@ -469,14 +557,13 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
 
       for (let i = 0; i < pillarCount; i++) {
         const base = pillarBaseData[i];
-        const ringIndex = Math.floor(i / 12);
-        const angle = ((i % 12) / 12) * Math.PI * 2 + ringIndex * 0.26;
+        const side = i % 2 === 0 ? -1 : 1;
         const currY = THREE.MathUtils.lerp(base.y, base.starY, dampedGridElev);
         const sy = THREE.MathUtils.lerp(base.scaleY, 0.08, dampedGridElev);
         const sx = THREE.MathUtils.lerp(1.0, 0.35, dampedGridElev);
 
         _dummyObj.position.set(base.x, currY, base.z);
-        _dummyObj.rotation.set(0, -angle + dampedGridElev * 0.6, 0);
+        _dummyObj.rotation.set(0, side * 0.15 + dampedGridElev * 0.6, 0);
         _dummyObj.scale.set(sx, sy, sx);
         _dummyObj.updateMatrix();
         instancedPillars.setMatrixAt(i, _dummyObj.matrix);
@@ -518,8 +605,8 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
           className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-25"
           aria-hidden="true"
         >
-          <div className="w-96 h-96 border border-[#888983] rotate-12 flex items-center justify-center">
-            <div className="w-64 h-64 border border-[#E9E5DA] -rotate-24" />
+          <div className="w-96 h-96 border border-[#526BFF]/50 rotate-12 flex items-center justify-center">
+            <div className="w-64 h-64 border border-[#F0A65A]/50 -rotate-24" />
           </div>
         </div>
       )}

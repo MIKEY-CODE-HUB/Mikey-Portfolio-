@@ -8,21 +8,23 @@
     --stone: #888983;
     --bone: #E9E5DA;
     --soft-white: #F8F7F2;
+    --cobalt: #526BFF;
+    --amber: #F0A65A;
   }
 
   html {
     background-color: #111210;
     color: #E9E5DA;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     scroll-behavior: smooth;
   }
 
   h1, h2, h3, .font-editorial {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   }
 
   .font-mono-tech {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
     font-variant-numeric: tabular-nums;
   }
 }

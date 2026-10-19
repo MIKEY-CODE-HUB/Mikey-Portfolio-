@@ -1,6 +1,7 @@
 export type RouteId =
   | 'home'
   | 'about'
+  | 'spaces'
   | 'work'
   | 'work-zenith'
   | 'work-deadzone'
@@ -13,6 +14,8 @@ export interface RouteSpec {
   label: string;
   scrollAnchor: number; // Normalized 0..1 world progress
   chapterIndex: string;
+  chapterTitle: string;
+  epigraph: string;
   subtitle: string;
 }
 
@@ -26,6 +29,8 @@ export interface CameraKeyframe {
   paradoxSeparation: number;
   wireframeMix: number;
   gridElevation: number;
+  cobaltIntensity: number;
+  amberIntensity: number;
 }
 
 export interface ProjectRecord {
@@ -44,6 +49,7 @@ export interface ProjectRecord {
   verifiedCapabilities: string[];
   architecturalNotes: string[];
   visualMotif: 'concentric-focus' | 'tactical-bastion';
+  accentColor: 'cobalt' | 'amber';
 }
 
 export interface InterestCluster {
@@ -78,83 +84,124 @@ export const ROUTES: RouteSpec[] = [
   {
     id: 'home',
     path: '/',
-    label: 'Home',
+    label: 'Threshold',
     scrollAnchor: 0.0,
     chapterIndex: '01',
+    chapterTitle: 'THE THRESHOLD',
+    epigraph: 'Every world begins with an assumption.',
     subtitle: 'Arrival & Monumental Installation',
   },
   {
     id: 'about',
     path: '/about',
     label: 'About',
-    scrollAnchor: 0.25,
+    scrollAnchor: 0.18,
     chapterIndex: '02',
+    chapterTitle: 'THE UNFINISHED SELF',
+    epigraph: 'I am not a finished answer.',
     subtitle: 'Still Becoming — Portrait in Paradox',
+  },
+  {
+    id: 'spaces',
+    path: '/spaces',
+    label: 'Quiet Spaces',
+    scrollAnchor: 0.38,
+    chapterIndex: '03',
+    chapterTitle: 'THE QUIETER SPACES BETWEEN STRUCTURES',
+    epigraph: 'Not everything meaningful needs to announce itself.',
+    subtitle: 'Spatial Reflections & Contradictions',
   },
   {
     id: 'work',
     path: '/work',
     label: 'Work',
-    scrollAnchor: 0.5,
-    chapterIndex: '03',
+    scrollAnchor: 0.6,
+    chapterIndex: '04',
+    chapterTitle: 'THINGS MADE REAL',
+    epigraph: 'An idea changes when you attempt to build it.',
     subtitle: 'Investigations & Built Artifacts',
   },
   {
     id: 'work-zenith',
     path: '/work/zenith',
     label: 'Zenith',
-    scrollAnchor: 0.54,
-    chapterIndex: '03.A',
+    scrollAnchor: 0.63,
+    chapterIndex: '04.A',
+    chapterTitle: 'THINGS MADE REAL · ZENITH',
+    epigraph: 'Sustained attention protected by architectural boundaries.',
     subtitle: 'Case Study · Focus & Accountability Platform',
   },
   {
     id: 'work-deadzone',
     path: '/work/deadzone-bastion',
     label: 'Deadzone Bastion',
-    scrollAnchor: 0.58,
-    chapterIndex: '03.B',
+    scrollAnchor: 0.66,
+    chapterIndex: '04.B',
+    chapterTitle: 'THINGS MADE REAL · DEADZONE BASTION',
+    epigraph: 'Every defensive structure is a hypothesis tested under pressure.',
     subtitle: 'Case Study · Tactical Tower-Defense Game',
   },
   {
     id: 'notes',
     path: '/notes',
-    label: 'Notes',
-    scrollAnchor: 0.75,
-    chapterIndex: '04',
-    subtitle: 'Margins, Exploration & Synthesis',
+    label: 'The Margin',
+    scrollAnchor: 0.82,
+    chapterIndex: '05',
+    chapterTitle: 'THE MARGIN',
+    epigraph: 'Some thoughts do not belong to a conclusion.',
+    subtitle: 'Areas of Exploration, Notebook & Synthesis',
   },
   {
     id: 'contact',
     path: '/contact',
-    label: 'Contact',
+    label: 'Exit',
     scrollAnchor: 1.0,
-    chapterIndex: '05',
-    subtitle: 'The Exit That Continues',
+    chapterIndex: '06',
+    chapterTitle: 'THE EXIT THAT CONTINUES',
+    epigraph: 'You can leave a place without finishing what it made you think about.',
+    subtitle: 'Horizon & External Coordinates',
   },
 ];
 
 export const SCENE_KEYFRAMES: Record<RouteId, CameraKeyframe> = {
   home: {
     position: [0, 1.8, 12.5],
-    lookAt: [0, 1.1, 0],
+    lookAt: [0, 1.2, 0],
     fov: 42,
     signatureScale: 1.15,
     signatureRotation: [0.14, -0.42, 0.04],
     signaturePosition: [0, 1.35, -1.2],
     paradoxSeparation: 0.18,
-    wireframeMix: 0.08,
+    wireframeMix: 0.12,
     gridElevation: 0.0,
+    cobaltIntensity: 0.55,
+    amberIntensity: 0.12,
   },
   about: {
-    position: [-4.2, 2.4, 9.2],
+    position: [-4.2, 2.35, 9.2],
     lookAt: [-0.8, 1.4, -0.5],
     fov: 40,
-    signatureScale: 1.0,
+    signatureScale: 1.02,
     signatureRotation: [0.38, 0.65, -0.18],
-    signaturePosition: [2.3, 1.6, -1.0],
-    paradoxSeparation: 0.55,
-    wireframeMix: 0.22,
-    gridElevation: 0.35,
+    signaturePosition: [2.3, 1.55, -1.0],
+    paradoxSeparation: 0.62,
+    wireframeMix: 0.24,
+    gridElevation: 0.25,
+    cobaltIntensity: 0.28,
+    amberIntensity: 0.78,
+  },
+  spaces: {
+    position: [0.0, 2.6, 10.6],
+    lookAt: [0.0, 1.5, -1.4],
+    fov: 38,
+    signatureScale: 0.88,
+    signatureRotation: [0.08, 1.12, 0.02],
+    signaturePosition: [0.0, 1.75, -2.2],
+    paradoxSeparation: 0.45,
+    wireframeMix: 0.35,
+    gridElevation: 0.5,
+    cobaltIntensity: 0.48,
+    amberIntensity: 0.85,
   },
   work: {
     position: [0.4, 3.2, 11.4],
@@ -164,8 +211,10 @@ export const SCENE_KEYFRAMES: Record<RouteId, CameraKeyframe> = {
     signatureRotation: [0.22, 1.57, 0.0],
     signaturePosition: [0, 2.2, -3.6],
     paradoxSeparation: 0.35,
-    wireframeMix: 0.68,
-    gridElevation: 0.65,
+    wireframeMix: 0.74,
+    gridElevation: 0.68,
+    cobaltIntensity: 0.92,
+    amberIntensity: 0.25,
   },
   'work-zenith': {
     position: [-3.8, 2.1, 7.4],
@@ -175,8 +224,10 @@ export const SCENE_KEYFRAMES: Record<RouteId, CameraKeyframe> = {
     signatureRotation: [0.1, 1.1, 0.05],
     signaturePosition: [1.4, 2.4, -4.4],
     paradoxSeparation: 0.12,
-    wireframeMix: 0.45,
+    wireframeMix: 0.48,
     gridElevation: 0.72,
+    cobaltIntensity: 0.88,
+    amberIntensity: 0.35,
   },
   'work-deadzone': {
     position: [3.8, 2.3, 7.4],
@@ -186,8 +237,10 @@ export const SCENE_KEYFRAMES: Record<RouteId, CameraKeyframe> = {
     signatureRotation: [0.32, 2.05, -0.12],
     signaturePosition: [-1.4, 2.4, -4.4],
     paradoxSeparation: 0.48,
-    wireframeMix: 0.78,
+    wireframeMix: 0.82,
     gridElevation: 0.78,
+    cobaltIntensity: 0.42,
+    amberIntensity: 0.88,
   },
   notes: {
     position: [3.4, 3.8, 10.2],
@@ -197,8 +250,10 @@ export const SCENE_KEYFRAMES: Record<RouteId, CameraKeyframe> = {
     signatureRotation: [0.52, 2.45, 0.24],
     signaturePosition: [-2.4, 1.8, -1.8],
     paradoxSeparation: 0.72,
-    wireframeMix: 0.5,
-    gridElevation: 0.9,
+    wireframeMix: 0.52,
+    gridElevation: 0.88,
+    cobaltIntensity: 0.62,
+    amberIntensity: 0.58,
   },
   contact: {
     position: [0, 1.6, 9.6],
@@ -208,8 +263,10 @@ export const SCENE_KEYFRAMES: Record<RouteId, CameraKeyframe> = {
     signatureRotation: [0.0, 0.785, 0.0],
     signaturePosition: [0, 1.3, -0.8],
     paradoxSeparation: 0.0,
-    wireframeMix: 0.15,
+    wireframeMix: 0.18,
     gridElevation: 1.0,
+    cobaltIntensity: 0.68,
+    amberIntensity: 0.68,
   },
 };
 
@@ -273,6 +330,8 @@ export function interpolateKeyframes(a: CameraKeyframe, b: CameraKeyframe, t: nu
     paradoxSeparation: lerpNumber(a.paradoxSeparation, b.paradoxSeparation, k),
     wireframeMix: lerpNumber(a.wireframeMix, b.wireframeMix, k),
     gridElevation: lerpNumber(a.gridElevation, b.gridElevation, k),
+    cobaltIntensity: lerpNumber(a.cobaltIntensity, b.cobaltIntensity, k),
+    amberIntensity: lerpNumber(a.amberIntensity, b.amberIntensity, k),
   };
 }
 
@@ -299,11 +358,11 @@ export const PROJECTS: ProjectRecord[] = [
     liveUrl: 'https://zenith-dusky-theta.vercel.app/',
     primaryActionLabel: 'Explore Zenith',
     shortSummary:
-      'A focus and accountability platform centered on deep work, silent coworking, distraction protection, and ambient study experiences.',
+      'A focus and accountability platform exploring deep work, concentration, distraction protection, and ambient study experiences.',
     coreIdea:
-      'Sustained attention is fragile in modern digital environments. Zenith explores how environmental boundaries, intentional session framing, and quiet shared presence can protect deep concentration without gamified noise.',
+      'Sustained attention is fragile in modern digital environments. Zenith is a real attempt to turn ideas about focus, temporal boundaries, and quiet shared presence into a functional product without gamified noise.',
     spatialRepresentation:
-      'Represented spatially through concentric temporal rings, calibrated boundary planes, and an unobstructed central locus of attention.',
+      'Represented spatially through concentric temporal rings, calibrated boundary planes, and an unobstructed central locus of attention highlighted by a subtle electric cobalt datum.',
     verifiedStatus: 'Live Web Deployment (Vercel)',
     verifiedCapabilities: [
       'Deep work session framing & temporal boundaries',
@@ -317,6 +376,7 @@ export const PROJECTS: ProjectRecord[] = [
       'Ongoing exploration: refining session state continuity and ambient environment controls.',
     ],
     visualMotif: 'concentric-focus',
+    accentColor: 'cobalt',
   },
   {
     id: 'deadzone-bastion',
@@ -341,11 +401,12 @@ export const PROJECTS: ProjectRecord[] = [
       'Browser-native interactive deployment',
     ],
     architecturalNotes: [
-      'Contrasts Zenith’s calm interior stillness with active spatial calculations under time constraints.',
+      'Acts as a narrative counterpoint to Zenith: where Zenith protects interior stillness, Deadzone Bastion tests structure against active external uncertainty.',
       'Built to explore state updates, target prioritization, and responsive browser rendering.',
-      'Additional technical specifications and telemetry remain open for future documentation as the project evolves.',
+      'Additional technical specifications remain open for future documentation as the project evolves.',
     ],
     visualMotif: 'tactical-bastion',
+    accentColor: 'amber',
   },
 ];
 

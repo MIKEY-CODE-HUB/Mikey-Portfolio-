@@ -7,7 +7,9 @@ export interface TopBarProps {
 }
 
 export const TopBar: React.FC<TopBarProps> = ({ activeRouteId, onNavigate }) => {
-  const primaryNavRoutes = ROUTES.filter((r) => !r.id.startsWith('work-'));
+  // Keep 5 concise single-line text links in Zone 2 to honor the Top Bar Contract
+  const navIds: RouteId[] = ['home', 'about', 'spaces', 'work', 'notes'];
+  const primaryNavRoutes = ROUTES.filter((r) => navIds.includes(r.id));
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
     e.preventDefault();
@@ -15,7 +17,7 @@ export const TopBar: React.FC<TopBarProps> = ({ activeRouteId, onNavigate }) => 
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between gap-8 px-6 md:px-10 py-4 bg-[#111210]/90 border-b border-[#454642]/40">
+    <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between gap-8 px-6 md:px-10 py-4 bg-[#111210]/92 border-b border-[#454642]/50">
       {/* Zone 1: Brand Title, single text element */}
       <a
         href="/"
@@ -34,15 +36,19 @@ export const TopBar: React.FC<TopBarProps> = ({ activeRouteId, onNavigate }) => 
           const isActive =
             activeRouteId === route.id ||
             (route.id === 'work' && activeRouteId.startsWith('work-'));
+          const activeBorderColor =
+            route.id === 'spaces' || route.id === 'about'
+              ? 'border-[#F0A65A]'
+              : 'border-[#526BFF]';
           return (
             <a
               key={route.id}
               href={route.path}
               onClick={(e) => handleLinkClick(e, route.path)}
               aria-current={isActive ? 'page' : undefined}
-              className={`whitespace-nowrap shrink-0 py-1 transition-colors border-b ${
+              className={`whitespace-nowrap shrink-0 py-1 transition-colors border-b-2 ${
                 isActive
-                  ? 'text-[#F8F7F2] border-[#E9E5DA]'
+                  ? `text-[#F8F7F2] ${activeBorderColor}`
                   : 'text-[#888983] border-transparent hover:text-[#E9E5DA]'
               }`}
             >
@@ -57,11 +63,11 @@ export const TopBar: React.FC<TopBarProps> = ({ activeRouteId, onNavigate }) => 
         <button
           type="button"
           onClick={() =>
-            onNavigate(activeRouteId === 'work' ? '/contact' : '/work')
+            onNavigate(activeRouteId === 'contact' ? '/work' : '/contact')
           }
           className="px-4 py-2 text-xs font-medium text-[#111210] bg-[#E9E5DA] hover:bg-[#F8F7F2] transition-colors whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F8F7F2]"
         >
-          {activeRouteId === 'work' ? 'Reach Out' : 'View Work'}
+          {activeRouteId === 'contact' ? 'Explore Work' : '06. Exit / Contact'}
         </button>
       </div>
     </header>

@@ -2,5 +2,7 @@
   "name": "MIKEY — Architectural 3D Portfolio",
   "description": "An immersive, continuous 3D personal portfolio and spatial architecture experience for MIKEY, exploring computer science, software engineering, and philosophical paradox.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

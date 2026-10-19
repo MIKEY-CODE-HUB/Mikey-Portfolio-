@@ -40,8 +40,17 @@ export const BottomControlDock: React.FC<BottomControlDockProps> = ({
         setCollapsed((prev) => !prev);
       }
     };
+    const onResize = () => {
+      if (window.innerWidth < 768) {
+        setCollapsed(true);
+      }
+    };
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('resize', onResize);
+    };
   }, []);
 
   return (

@@ -11,18 +11,21 @@ import {
   INTEREST_CLUSTERS,
   MarginNote,
   PROJECTS,
+  ROUTES,
   RouteId,
   SCENE_KEYFRAMES,
   filterInterestsByCluster,
   resolveRouteFromPath,
   resolveRouteFromScroll,
 } from './domain/portfolioData';
+import { AccentTone } from './domain/thoughtsData';
 import { WorldCanvas } from './three/WorldCanvas';
 import { SurfaceFinishMode } from './three/signatureObject';
 import { TopBar } from './components/TopBar';
 import { BottomControlDock } from './components/BottomControlDock';
+import { QuieterSpacesChapter } from './components/QuieterSpacesChapter';
 import { SynthesisStudio } from './components/SynthesisStudio';
-import { ArrowUpRight, ArrowLeft, Compass, Plus } from 'lucide-react';
+import { ArrowUpRight, ArrowLeft, Compass, Plus, BookOpen } from 'lucide-react';
 
 const STORAGE_KEY_NOTES = 'mikey_portfolio_margin_notes_v1';
 
@@ -35,7 +38,7 @@ export default function App() {
     return initial.scrollAnchor;
   });
 
-  // 3D Spatial Controls state
+  // 3D Spatial & Philosophical Story State
   const [paradoxOverride, setParadoxOverride] = useState<number | null>(null);
   const [finishMode, setFinishMode] = useState<SurfaceFinishMode>('obsidian');
   const [cameraPreset, setCameraPreset] = useState<
@@ -49,7 +52,15 @@ export default function App() {
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
   const [signatureInspectedCount, setSignatureInspectedCount] = useState(0);
 
-  // Notes & Interests state
+  // Chapter 03 ("The Quieter Spaces Between Structures") interactive state
+  const [activeThoughtAccent, setActiveThoughtAccent] =
+    useState<AccentTone | null>(null);
+  const [stayingWithThought, setStayingWithThought] = useState<boolean>(false);
+  const [thoughtCameraOffset, setThoughtCameraOffset] = useState<
+    [number, number, number]
+  >([0, 0, 0]);
+
+  // Chapter 05 ("The Margin") state
   const [selectedClusterId, setSelectedClusterId] = useState<string>('all');
   const [marginNotes, setMarginNotes] = useState<MarginNote[]>(() => {
     try {
@@ -69,18 +80,20 @@ export default function App() {
   const [noteFormError, setNoteFormError] = useState<string | null>(null);
   const [isAddingNote, setIsAddingNote] = useState(false);
 
-  // Section refs for smooth scroll-to-section coordination
+  // Section refs for smooth scroll-to-chapter coordination
   const homeRef = useRef<HTMLElement | null>(null);
   const aboutRef = useRef<HTMLElement | null>(null);
+  const spacesRef = useRef<HTMLElement | null>(null);
   const workRef = useRef<HTMLElement | null>(null);
   const notesRef = useRef<HTMLElement | null>(null);
   const contactRef = useRef<HTMLElement | null>(null);
   const programmaticScrollRef = useRef<boolean>(false);
 
   const scrollToRouteSection = (routeId: RouteId, instant = false) => {
-    const map: Record<string, HTMLElement | null> = {
+    const map: Record<RouteId, HTMLElement | null> = {
       home: homeRef.current,
       about: aboutRef.current,
+      spaces: spacesRef.current,
       work: workRef.current,
       'work-zenith': workRef.current,
       'work-deadzone': workRef.current,
@@ -95,13 +108,16 @@ export default function App() {
         top,
         behavior: instant || reducedMotion ? 'auto' : 'smooth',
       });
-      window.setTimeout(() => {
-        programmaticScrollRef.current = false;
-      }, instant || reducedMotion ? 150 : 700);
+      window.setTimeout(
+        () => {
+          programmaticScrollRef.current = false;
+        },
+        instant || reducedMotion ? 120 : 650
+      );
     }
   };
 
-  // Navigate to any path with interruptible transition & URL sync
+  // Navigate to any chapter path with interruptible transition & URL sync
   const navigateToPath = (path: string, replace = false) => {
     const resolved = resolveRouteFromPath(path);
     programmaticScrollRef.current = true;
@@ -127,7 +143,7 @@ export default function App() {
 
     if (params.get('autostart') === '1' && resolved.id === 'home') {
       setActiveRouteId('about');
-      setScrollProgress(0.25);
+      setScrollProgress(0.18);
       scrollToRouteSection('about', true);
     } else if (resolved.id !== 'home') {
       scrollToRouteSection(resolved.id, true);
@@ -158,11 +174,10 @@ export default function App() {
       const rawProgress = Math.max(0, Math.min(1, window.scrollY / maxScroll));
       setScrollProgress(rawProgress);
 
-      // Preserve case-study sub-route when visitor is within the Work chapter
       setActiveRouteId((prevRoute) => {
         if (
           (prevRoute === 'work-zenith' || prevRoute === 'work-deadzone') &&
-          Math.abs(rawProgress - 0.5) < 0.18
+          Math.abs(rawProgress - 0.6) < 0.14
         ) {
           return prevRoute;
         }
@@ -228,6 +243,9 @@ export default function App() {
       ? PROJECTS[1]
       : null;
 
+  const activeChapterSpec =
+    ROUTES.find((r) => r.id === activeRouteId) || ROUTES[0];
+
   const filteredClusters = filterInterestsByCluster(
     INTEREST_CLUSTERS,
     selectedClusterId
@@ -235,7 +253,7 @@ export default function App() {
 
   return (
     <div
-      className="relative min-h-screen text-[#E9E5DA] selection:bg-[#E9E5DA] selection:text-[#111210]"
+      className="relative min-h-screen text-[#E9E5DA] selection:bg-[#526BFF] selection:text-[#F8F7F2]"
       data-route={activeRouteId}
     >
       {/* Full-bleed Native Three.js Continuous Environment */}
@@ -247,6 +265,9 @@ export default function App() {
         cameraPreset={cameraPreset}
         reducedMotion={reducedMotion}
         hoveredProjectId={hoveredProjectId}
+        activeThoughtAccent={activeThoughtAccent}
+        stayingWithThought={stayingWithThought}
+        thoughtCameraOffset={thoughtCameraOffset}
         onNavigateRoute={navigateToPath}
         onInspectSignature={handleInspectSignature}
       />
@@ -254,41 +275,44 @@ export default function App() {
       {/* Persistent 3-Zone Top Navigation */}
       <TopBar activeRouteId={activeRouteId} onNavigate={navigateToPath} />
 
-      {/* Main Continuous Spatial Narrative */}
+      {/* Main Continuous Spatial Story ("MIKEY — THE STORY IS NOT FINISHED") */}
       <main className="relative z-10 pointer-events-none">
         {/* ===================================================================
-            CHAPTER 01: HOME / OPENING EXPERIENCE
+            CHAPTER 01 — THE THRESHOLD
+            "Every world begins with an assumption."
         =================================================================== */}
         <section
           ref={homeRef}
           id="home"
-          aria-label="Opening Installation"
-          className="min-h-screen w-full max-w-[1360px] mx-auto px-6 md:px-12 pt-28 pb-28 flex flex-col justify-between"
+          aria-label="Chapter 01: The Threshold"
+          className="min-h-screen w-full max-w-[1360px] mx-auto px-6 md:px-12 pt-24 pb-24 md:pb-32 flex flex-col justify-between"
         >
-          {/* Top-left quiet architectural coordinate & skip control */}
+          {/* Top-left editorial chapter mark & interruptible jump control */}
           <div className="flex flex-wrap items-center justify-between gap-4 pointer-events-auto">
-            <div className="text-xs font-mono-tech text-[#888983] flex items-center gap-2">
-              <span>01. Arrival</span>
+            <div className="text-xs font-mono-tech text-[#888983] flex flex-wrap items-center gap-2">
+              <span className="text-[#526BFF]">01 — THE THRESHOLD</span>
               <span aria-hidden="true">·</span>
-              <span>Architectural Contradiction in Obsidian &amp; Bone</span>
+              <span>“Every world begins with an assumption.”</span>
             </div>
             <button
               type="button"
-              onClick={() => navigateToPath('/about')}
+              onClick={() => navigateToPath('/spaces')}
               className="text-xs font-mono-tech text-[#888983] hover:text-[#F8F7F2] underline underline-offset-4 transition-colors cursor-pointer"
             >
-              Skip Opening Sequence →
+              Jump to Quiet Spaces (03) →
             </button>
           </div>
 
           {/* Central viewport intentionally kept open for the 3D MIKEY wordmark & Signature Impossible Object */}
           <div className="my-auto py-20" aria-hidden="true" />
 
-          {/* Bottom Split: Concise Introduction & Actions without obscuring center 3D geometry */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end pointer-events-auto bg-[#111210]/85 border border-[#454642]/60 p-6 md:p-8">
+          {/* Bottom Split: Narrative Threshold & First Electric Cobalt Line */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end pointer-events-auto bg-[#111210]/88 border border-[#454642]/70 p-6 md:p-9">
             <div className="lg:col-span-7 space-y-3">
-              <div className="text-xs font-mono-tech text-[#888983]">
-                PUBLIC IDENTITY · MIKEY
+              {/* Thin Electric Cobalt architectural datum line */}
+              <div className="flex items-center gap-3 text-xs font-mono-tech text-[#888983]">
+                <span className="inline-block w-8 h-[2px] bg-[#526BFF]" aria-hidden="true" />
+                <span>PUBLIC IDENTITY · MIKEY · THE STORY IS NOT FINISHED</span>
               </div>
               <h1
                 className="font-editorial text-4xl sm:text-5xl md:text-6xl font-normal tracking-tight text-[#F8F7F2]"
@@ -301,11 +325,11 @@ export default function App() {
               </p>
             </div>
 
-            <div className="lg:col-span-5 flex flex-wrap items-center lg:justify-end gap-4">
+            <div className="lg:col-span-5 flex flex-wrap items-center lg:justify-end gap-3.5">
               <button
                 type="button"
                 onClick={() => navigateToPath('/about')}
-                className="px-5 py-3 text-xs sm:text-sm font-medium bg-[#E9E5DA] text-[#111210] hover:bg-[#F8F7F2] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                className="px-5 py-3 text-xs sm:text-sm font-medium bg-[#526BFF] text-[#F8F7F2] hover:bg-[#526BFF]/90 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 Enter the world
               </button>
@@ -319,9 +343,9 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleInspectSignature}
-                className="px-4 py-3 text-xs font-mono-tech text-[#888983] hover:text-[#E9E5DA] border border-[#454642] transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-3 text-xs font-mono-tech text-[#E9E5DA] hover:text-[#F8F7F2] border border-[#454642] hover:border-[#526BFF] transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5"
               >
-                <Compass className="w-3.5 h-3.5" />
+                <Compass className="w-3.5 h-3.5 text-[#526BFF]" />
                 <span>Shift Paradox ({signatureInspectedCount})</span>
               </button>
             </div>
@@ -329,20 +353,21 @@ export default function App() {
         </section>
 
         {/* ===================================================================
-            CHAPTER 02: ABOUT — A HUMAN, HONEST PORTRAIT
+            CHAPTER 02 — THE UNFINISHED SELF
+            "I am not a finished answer."
         =================================================================== */}
         <section
           ref={aboutRef}
           id="about"
-          aria-label="About MIKEY"
+          aria-label="Chapter 02: The Unfinished Self"
           className="min-h-screen w-full max-w-[1360px] mx-auto px-6 md:px-12 py-28 flex items-center"
         >
           <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            {/* Left Column: Introspective Editorial Portrait */}
-            <div className="lg:col-span-7 bg-[#111210]/90 border border-[#454642]/70 p-8 md:p-12 pointer-events-auto space-y-6">
-              <div className="flex items-center justify-between text-xs font-mono-tech text-[#888983] pb-4 border-b border-[#454642]/50">
-                <span>02. Portrait &amp; Direction</span>
-                <span>Still Becoming</span>
+            {/* Left Column: Introspective Editorial Portrait illuminated by subtle Warm Amber */}
+            <div className="lg:col-span-7 bg-[#111210]/92 border border-[#454642]/75 p-8 md:p-12 pointer-events-auto space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono-tech text-[#888983] pb-4 border-b border-[#454642]/50">
+                <span className="text-[#F0A65A]">02 — THE UNFINISHED SELF</span>
+                <span>“I am not a finished answer.”</span>
               </div>
 
               <h2
@@ -358,7 +383,7 @@ export default function App() {
                     key={idx}
                     className={
                       idx === 0 || idx === 1
-                        ? 'font-editorial text-xl sm:text-2xl text-[#F8F7F2]'
+                        ? 'font-editorial text-xl sm:text-2xl text-[#F0A65A]'
                         : 'text-[#E9E5DA]/90'
                     }
                   >
@@ -373,26 +398,28 @@ export default function App() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigateToPath('/work')}
-                  className="px-4 py-2 text-xs font-medium bg-[#E9E5DA] text-[#111210] hover:bg-[#F8F7F2] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  onClick={() => navigateToPath('/spaces')}
+                  className="px-4 py-2.5 text-xs font-medium bg-[#E9E5DA] text-[#111210] hover:bg-[#F8F7F2] transition-colors whitespace-nowrap shrink-0 cursor-pointer inline-flex items-center gap-2"
                 >
-                  Continue to Built Work →
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>Enter the Quieter Spaces (03) →</span>
                 </button>
               </div>
             </div>
 
-            {/* Right Column: Open Spatial Framing for the 3D Signature Object */}
-            <div className="lg:col-span-5 lg:mt-24 bg-[#161715]/88 border border-[#454642]/60 p-6 pointer-events-auto space-y-4">
-              <div className="text-xs font-mono-tech text-[#888983]">
+            {/* Right Column: Spatial Contradiction Framing for the 3D Signature Object */}
+            <div className="lg:col-span-5 lg:mt-24 bg-[#161715]/90 border border-[#454642]/60 p-6 pointer-events-auto space-y-4">
+              <div className="text-xs font-mono-tech text-[#526BFF]">
                 SPATIAL ANCHOR · IMPOSSIBLE MONOLITH
               </div>
               <h3 className="font-editorial text-2xl text-[#F8F7F2]">
-                Perspective &amp; Construction
+                When the Vantage Point Shifts
               </h3>
               <p className="text-sm text-[#888983] leading-relaxed">
-                Seen from the arrival axis, the obsidian beams form a closed frame.
-                From this oblique vantage point, the cantilevers separate into
-                independent trajectories held in tension by a single translucent datum plane.
+                Seen from the threshold axis, the obsidian beams form a closed frame.
+                From this oblique angle, the cantilevers separate into independent
+                trajectories held in tension by a single translucent datum plane and an
+                electric cobalt arc.
               </p>
               <div className="pt-2 flex items-center gap-3">
                 <button
@@ -402,7 +429,7 @@ export default function App() {
                       prev !== null && prev > 0.5 ? 0.0 : 0.85
                     )
                   }
-                  className="px-3.5 py-2 text-xs font-mono-tech border border-[#888983] text-[#E9E5DA] hover:bg-[#20211F] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-mono-tech border border-[#888983] text-[#E9E5DA] hover:border-[#526BFF] hover:bg-[#20211F] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   Toggle Perspective Alignment
                 </button>
@@ -412,24 +439,52 @@ export default function App() {
         </section>
 
         {/* ===================================================================
-            CHAPTER 03: WORK — REAL PROJECTS & CASE STUDIES
+            CHAPTER 03 — THE QUIETER SPACES BETWEEN STRUCTURES
+            "Not everything meaningful needs to announce itself."
+        =================================================================== */}
+        <section
+          ref={spacesRef}
+          id="spaces"
+          aria-label="Chapter 03: The Quieter Spaces Between Structures"
+          className="min-h-screen w-full max-w-[1360px] mx-auto px-6 md:px-12 py-28 flex items-center"
+        >
+          <QuieterSpacesChapter
+            reducedMotion={reducedMotion}
+            onThoughtFocusChange={({
+              accent,
+              staying,
+              cameraOffset,
+              paradoxTarget,
+            }) => {
+              setActiveThoughtAccent(accent);
+              setStayingWithThought(staying);
+              setThoughtCameraOffset(cameraOffset);
+              setParadoxOverride(staying ? paradoxTarget : null);
+            }}
+            onContinueToWork={() => navigateToPath('/work')}
+          />
+        </section>
+
+        {/* ===================================================================
+            CHAPTER 04 — THINGS MADE REAL
+            "An idea changes when you attempt to build it."
         =================================================================== */}
         <section
           ref={workRef}
           id="work"
-          aria-label="Selected Work and Investigations"
+          aria-label="Chapter 04: Things Made Real"
           className="min-h-screen w-full max-w-[1360px] mx-auto px-6 md:px-12 py-28 flex flex-col justify-center"
         >
-          <div className="bg-[#111210]/90 border border-[#454642]/70 p-8 md:p-12 pointer-events-auto">
+          <div className="bg-[#111210]/92 border border-[#454642]/75 p-8 md:p-12 pointer-events-auto">
             <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[#454642]/50">
               <div>
-                <div className="text-xs font-mono-tech text-[#888983] mb-1">
-                  03. Investigations &amp; Built Artifacts
+                <div className="text-xs font-mono-tech text-[#526BFF] mb-1">
+                  04 — THINGS MADE REAL · “An idea changes when you attempt to build it.”
                 </div>
                 <h2 className="font-editorial text-3xl sm:text-4xl md:text-5xl text-[#F8F7F2]">
                   {activeCaseStudyProject
                     ? `${activeCaseStudyProject.title} — Architectural Case Study`
-                    : 'Real Software, Explored Through Structure'}
+                    : 'Built Artifacts Emerging from the World'}
                 </h2>
               </div>
 
@@ -457,7 +512,15 @@ export default function App() {
               >
                 <div className="lg:col-span-7 space-y-6">
                   <div className="text-xs font-mono-tech text-[#888983] flex flex-wrap items-center gap-2">
-                    <span>Artifact {activeCaseStudyProject.index}</span>
+                    <span
+                      className={
+                        activeCaseStudyProject.accentColor === 'cobalt'
+                          ? 'text-[#526BFF]'
+                          : 'text-[#F0A65A]'
+                      }
+                    >
+                      Artifact {activeCaseStudyProject.index}
+                    </span>
                     <span aria-hidden="true">·</span>
                     <span>{activeCaseStudyProject.category}</span>
                     <span aria-hidden="true">·</span>
@@ -491,7 +554,7 @@ export default function App() {
                       href={activeCaseStudyProject.liveUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-5 py-3 text-xs sm:text-sm font-medium bg-[#E9E5DA] text-[#111210] hover:bg-[#F8F7F2] transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0"
+                      className="px-5 py-3 text-xs sm:text-sm font-medium bg-[#526BFF] text-[#F8F7F2] hover:bg-[#526BFF]/90 transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0"
                     >
                       <span>{activeCaseStudyProject.primaryActionLabel}</span>
                       <ArrowUpRight className="w-4 h-4" />
@@ -553,15 +616,17 @@ export default function App() {
             ) : (
               /* Dual Distinct Composition for Zenith vs Deadzone Bastion */
               <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-                {/* Project 1: Zenith — Expansive, calm, horizon-oriented composition */}
+                {/* Project 1: Zenith — Concentric Cobalt focus locus */}
                 <article
                   onMouseEnter={() => setHoveredProjectId('zenith')}
                   onMouseLeave={() => setHoveredProjectId(null)}
-                  className="lg:col-span-7 bg-[#161715]/95 border border-[#454642] p-7 md:p-9 flex flex-col justify-between transition-colors hover:border-[#E9E5DA]"
+                  className="lg:col-span-7 bg-[#161715]/95 border border-[#454642] p-7 md:p-9 flex flex-col justify-between transition-colors hover:border-[#526BFF]"
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between text-xs font-mono-tech text-[#888983]">
-                      <span>01 · Focus &amp; Accountability Platform</span>
+                      <span className="text-[#526BFF]">
+                        01 · Focus &amp; Accountability Platform
+                      </span>
                       <span>zenith-dusky-theta.vercel.app</span>
                     </div>
 
@@ -587,7 +652,7 @@ export default function App() {
                       href={PROJECTS[0].liveUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-5 py-2.5 text-xs font-medium bg-[#E9E5DA] text-[#111210] hover:bg-[#F8F7F2] transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0"
+                      className="px-5 py-2.5 text-xs font-medium bg-[#526BFF] text-[#F8F7F2] hover:bg-[#526BFF]/90 transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0"
                     >
                       <span>Explore Zenith</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
@@ -596,22 +661,24 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => navigateToPath('/work/zenith')}
-                      className="px-4 py-2.5 text-xs font-mono-tech text-[#E9E5DA] border border-[#454642] hover:border-[#E9E5DA] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                      className="px-4 py-2.5 text-xs font-mono-tech text-[#E9E5DA] border border-[#454642] hover:border-[#526BFF] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                     >
                       Read Case Study →
                     </button>
                   </div>
                 </article>
 
-                {/* Project 2: Deadzone Bastion — Angular, structured, tactical perimeter composition */}
+                {/* Project 2: Deadzone Bastion — Angular Warm Amber tactical perimeter */}
                 <article
                   onMouseEnter={() => setHoveredProjectId('deadzone-bastion')}
                   onMouseLeave={() => setHoveredProjectId(null)}
-                  className="lg:col-span-5 bg-[#20211F]/95 border border-[#888983]/60 p-7 md:p-9 flex flex-col justify-between transition-colors hover:border-[#F8F7F2]"
+                  className="lg:col-span-5 bg-[#20211F]/95 border border-[#888983]/60 p-7 md:p-9 flex flex-col justify-between transition-colors hover:border-[#F0A65A]"
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between text-xs font-mono-tech text-[#888983]">
-                      <span>02 · Tactical Tower-Defense Game</span>
+                      <span className="text-[#F0A65A]">
+                        02 · Tactical Tower-Defense Game
+                      </span>
                       <span>Live Arena</span>
                     </div>
 
@@ -646,7 +713,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => navigateToPath('/work/deadzone-bastion')}
-                      className="px-4 py-2.5 text-xs font-mono-tech text-[#E9E5DA] border border-[#454642] hover:border-[#E9E5DA] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                      className="px-4 py-2.5 text-xs font-mono-tech text-[#E9E5DA] border border-[#454642] hover:border-[#F0A65A] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                     >
                       Read Case Study →
                     </button>
@@ -658,22 +725,23 @@ export default function App() {
         </section>
 
         {/* ===================================================================
-            CHAPTER 04: NOTES & INTERESTS (THE MARGINS OF THE NOTEBOOK)
+            CHAPTER 05 — THE MARGIN
+            "Some thoughts do not belong to a conclusion."
         =================================================================== */}
         <section
           ref={notesRef}
           id="notes"
-          aria-label="Notes and Areas of Exploration"
+          aria-label="Chapter 05: The Margin"
           className="min-h-screen w-full max-w-[1360px] mx-auto px-6 md:px-12 py-28"
         >
           <div className="bg-[#111210]/92 border border-[#454642]/70 p-8 md:p-12 pointer-events-auto">
             <div className="flex flex-wrap items-end justify-between gap-6 pb-6 border-b border-[#454642]/50">
               <div>
-                <div className="text-xs font-mono-tech text-[#888983] mb-1">
-                  04. Margins, Learning &amp; Areas of Exploration
+                <div className="text-xs font-mono-tech text-[#F0A65A] mb-1">
+                  05 — THE MARGIN · “Some thoughts do not belong to a conclusion.”
                 </div>
                 <h2 className="font-editorial text-3xl sm:text-4xl md:text-5xl text-[#F8F7F2]">
-                  The Quieter Spaces Between Structures
+                  Directions of Study &amp; Working Notes
                 </h2>
                 <p className="text-sm text-[#888983] mt-2 max-w-2xl">
                   Presented as genuine directions of study, curiosity, and ongoing
@@ -771,7 +839,9 @@ export default function App() {
                   className="px-4 py-2 text-xs font-medium bg-[#20211F] text-[#E9E5DA] border border-[#888983] hover:border-[#F8F7F2] transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>{isAddingNote ? 'Close Margin Editor' : 'Append Margin Note'}</span>
+                  <span>
+                    {isAddingNote ? 'Close Margin Editor' : 'Append Margin Note'}
+                  </span>
                 </button>
               </div>
 
@@ -832,7 +902,10 @@ export default function App() {
                   </div>
 
                   {noteFormError && (
-                    <p role="alert" className="text-xs text-[#E9E5DA] bg-[#20211F] p-2 border border-[#888983]">
+                    <p
+                      role="alert"
+                      className="text-xs text-[#E9E5DA] bg-[#20211F] p-2 border border-[#888983]"
+                    >
                       {noteFormError}
                     </p>
                   )}
@@ -876,32 +949,38 @@ export default function App() {
         </section>
 
         {/* ===================================================================
-            CHAPTER 05: CONTACT & EXTERNAL PROFILES ("THE EXIT THAT CONTINUES")
+            CHAPTER 06 — THE EXIT THAT CONTINUES
+            "You can leave a place without finishing what it made you think about."
         =================================================================== */}
         <section
           ref={contactRef}
           id="contact"
-          aria-label="Contact and External Profiles"
+          aria-label="Chapter 06: The Exit That Continues"
           className="min-h-screen w-full max-w-[1360px] mx-auto px-6 md:px-12 py-28 flex items-center"
         >
           <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
-            <div className="lg:col-span-7 bg-[#111210]/92 border border-[#454642]/70 p-8 md:p-12 pointer-events-auto space-y-6">
-              <div className="text-xs font-mono-tech text-[#888983]">
-                05. Horizon &amp; Continuity
+            <div className="lg:col-span-7 bg-[#111210]/92 border border-[#454642]/75 p-8 md:p-12 pointer-events-auto space-y-6">
+              {/* Dual Cobalt & Amber convergence line before returning to monochrome */}
+              <div className="flex items-center gap-3 text-xs font-mono-tech text-[#888983]">
+                <span className="inline-block w-5 h-[2px] bg-[#526BFF]" aria-hidden="true" />
+                <span className="inline-block w-5 h-[2px] bg-[#F0A65A]" aria-hidden="true" />
+                <span>06 — THE EXIT THAT CONTINUES</span>
               </div>
 
               <h2 className="font-editorial text-4xl sm:text-5xl text-[#F8F7F2]">
                 The Exit That Continues
               </h2>
 
-              <p className="text-base sm:text-lg text-[#E9E5DA] leading-relaxed">
-                You’ve reached the edge of this little world. It doesn’t have to
-                be the end of the conversation.
+              <p className="font-editorial italic text-xl sm:text-2xl text-[#E9E5DA] leading-relaxed">
+                “{activeChapterSpec.id === 'contact'
+                  ? activeChapterSpec.epigraph
+                  : 'You can leave a place without finishing what it made you think about.'}”
               </p>
 
-              <p className="text-sm text-[#888983] leading-relaxed">
-                If something here made you curious, feel free to reach out or
-                follow what I’m building across these coordinates.
+              <p className="text-sm sm:text-base text-[#E9E5DA]/90 leading-relaxed">
+                You’ve reached the edge of this little world. The monolith that began as
+                an impossible contradiction at the threshold re-aligns here along the
+                horizon—not as a closed conclusion, but as an open coordinate.
               </p>
 
               <div className="pt-4 divide-y divide-[#454642]/50 border-t border-b border-[#454642]/50">
@@ -940,7 +1019,7 @@ export default function App() {
                   onClick={() => navigateToPath('/')}
                   className="hover:text-[#F8F7F2] underline underline-offset-4 cursor-pointer"
                 >
-                  Return to Origin (01) ↑
+                  Return to The Threshold (01) ↑
                 </button>
               </footer>
             </div>
@@ -964,6 +1043,9 @@ export default function App() {
           setParadoxOverride(null);
           setFinishMode('obsidian');
           setCameraPreset('narrative');
+          setActiveThoughtAccent(null);
+          setStayingWithThought(false);
+          setThoughtCameraOffset([0, 0, 0]);
         }}
       />
     </div>

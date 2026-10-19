@@ -11,9 +11,16 @@ export interface SignatureImpossibleObject {
     wireframeMix: number;
     finishMode: SurfaceFinishMode;
     hoverIntensity: number;
+    cobaltIntensity: number;
+    amberIntensity: number;
   }) => void;
   dispose: () => void;
 }
+
+const _cobaltColor = new THREE.Color(0x526bff);
+const _amberColor = new THREE.Color(0xf0a65a);
+const _boneColor = new THREE.Color(0xe9e5da);
+const _softWhiteColor = new THREE.Color(0xf8f7f2);
 
 export function createSignatureImpossibleObject(
   bumpTexture: THREE.CanvasTexture,
@@ -25,7 +32,7 @@ export function createSignatureImpossibleObject(
   const geometries: THREE.BufferGeometry[] = [];
   const materials: THREE.Material[] = [];
 
-  // Materials across 3 contrasting roughness/metalness finishes
+  // Materials across contrasting monochrome finishes + selective Cobalt & Amber accents
   const primaryMat = new THREE.MeshStandardMaterial({
     color: 0x20211f,
     roughness: 0.72,
@@ -47,6 +54,20 @@ export function createSignatureImpossibleObject(
     bumpMap: bumpTexture,
     bumpScale: 0.008,
   });
+  const cobaltTrajectoryMat = new THREE.MeshStandardMaterial({
+    color: 0xe9e5da,
+    emissive: 0x526bff,
+    emissiveIntensity: 0.35,
+    roughness: 0.25,
+    metalness: 0.45,
+  });
+  const amberAxisMat = new THREE.MeshStandardMaterial({
+    color: 0xe9e5da,
+    emissive: 0xf0a65a,
+    emissiveIntensity: 0.3,
+    roughness: 0.28,
+    metalness: 0.35,
+  });
   const translucentPlaneMat = new THREE.MeshPhysicalMaterial({
     color: 0x454642,
     roughness: 0.15,
@@ -63,8 +84,22 @@ export function createSignatureImpossibleObject(
     transparent: true,
     opacity: 0.55,
   });
+  const cobaltEdgeMat = new THREE.LineBasicMaterial({
+    color: 0x526bff,
+    transparent: true,
+    opacity: 0.65,
+  });
 
-  materials.push(primaryMat, boneAccentMat, brushedMetalMat, translucentPlaneMat, edgeLineMat);
+  materials.push(
+    primaryMat,
+    boneAccentMat,
+    brushedMetalMat,
+    cobaltTrajectoryMat,
+    amberAxisMat,
+    translucentPlaneMat,
+    edgeLineMat,
+    cobaltEdgeMat
+  );
 
   // Helper to create beveled L-beam segments (Parts 1-4: Primary Silhouette)
   function createLBeam(armA: number, armB: number, thickness: number, depth: number): THREE.ExtrudeGeometry {
@@ -110,7 +145,7 @@ export function createSignatureImpossibleObject(
   beam2.position.set(0.42, 0.45, -0.42);
   const edges2Geo = new THREE.EdgesGeometry(beamGeoA, 20);
   geometries.push(edges2Geo);
-  beam2.add(new THREE.LineSegments(edges2Geo, edgeLineMat));
+  beam2.add(new THREE.LineSegments(edges2Geo, cobaltEdgeMat));
 
   // Part 3: Bone-white cantilevered paradox bar passing through the obstructing plane
   const passBarGeo = new THREE.BoxGeometry(3.2, 0.22, 0.22);
@@ -151,24 +186,24 @@ export function createSignatureImpossibleObject(
   calibrationRing.rotation.x = Math.PI / 3;
   calibrationRing.position.set(0, 0.22, 0);
 
-  // Part 7: Secondary Read — TubeGeometry spatial tension arc connecting the paradox gap
+  // Part 7: Secondary Read — TubeGeometry spatial tension arc (Electric Cobalt curiosity line)
   const curve = new THREE.CatmullRomCurve3([
     new THREE.Vector3(-1.35, -0.85, 0.45),
     new THREE.Vector3(-0.55, 0.95, 0.65),
     new THREE.Vector3(0.65, 1.15, -0.55),
     new THREE.Vector3(1.35, -0.65, -0.45),
   ]);
-  const tubeGeo = new THREE.TubeGeometry(curve, 36, 0.032, 8, false);
+  const tubeGeo = new THREE.TubeGeometry(curve, 36, 0.034, 8, false);
   geometries.push(tubeGeo);
-  const tensionArc = new THREE.Mesh(tubeGeo, boneAccentMat);
+  const tensionArc = new THREE.Mesh(tubeGeo, cobaltTrajectoryMat);
 
-  // Part 8: Accent Detail — Suspended bone-white plumb bob & vertical axis needle
-  const needleGeo = new THREE.CylinderGeometry(0.015, 0.015, 3.6, 12);
+  // Part 8: Accent Detail — Suspended Warm Amber plumb bob & vertical axis needle
+  const needleGeo = new THREE.CylinderGeometry(0.018, 0.018, 3.6, 12);
   geometries.push(needleGeo);
-  const axisNeedle = new THREE.Mesh(needleGeo, boneAccentMat);
+  const axisNeedle = new THREE.Mesh(needleGeo, amberAxisMat);
   axisNeedle.position.set(0, 0.3, 0);
 
-  // Part 9: Accent Detail — Contradictory ground shadow bar (disagrees with upper cantilever angle)
+  // Part 9: Accent Detail — Contradictory ground shadow bar
   const shadowBarGeo = new THREE.PlaneGeometry(4.2, 0.26);
   geometries.push(shadowBarGeo);
   const shadowBarMat = new THREE.MeshBasicMaterial({
@@ -225,7 +260,15 @@ export function createSignatureImpossibleObject(
   return {
     group,
     clickProxy,
-    updateState: ({ elapsed, paradoxSeparation, wireframeMix, finishMode, hoverIntensity }) => {
+    updateState: ({
+      elapsed,
+      paradoxSeparation,
+      wireframeMix,
+      finishMode,
+      hoverIntensity,
+      cobaltIntensity,
+      amberIntensity,
+    }) => {
       const sep = paradoxSeparation;
 
       // Smooth architectural separation of the impossible joints
@@ -250,6 +293,16 @@ export function createSignatureImpossibleObject(
         primaryMat.metalness = 0.18;
         primaryMat.roughness = 0.72;
       }
+
+      // Selective Electric Cobalt (#526BFF) & Warm Amber (#F0A65A) accents
+      cobaltTrajectoryMat.color.copy(_boneColor).lerp(_cobaltColor, cobaltIntensity * 0.85);
+      cobaltTrajectoryMat.emissiveIntensity = 0.15 + cobaltIntensity * 0.65 + hoverIntensity * 0.3;
+
+      amberAxisMat.color.copy(_boneColor).lerp(_amberColor, amberIntensity * 0.9);
+      amberAxisMat.emissiveIntensity = 0.15 + amberIntensity * 0.7 + hoverIntensity * 0.25;
+
+      cobaltEdgeMat.color.copy(_softWhiteColor).lerp(_cobaltColor, cobaltIntensity);
+      cobaltEdgeMat.opacity = Math.min(1, 0.35 + cobaltIntensity * 0.55 + wireframeMix * 0.3);
 
       edgeLineMat.opacity = Math.min(1, 0.38 + wireframeMix * 0.55 + hoverIntensity * 0.25);
       contradictoryShadowBar.material.opacity = 0.12 + (1 - sep) * 0.14;
