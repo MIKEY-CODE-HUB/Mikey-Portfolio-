@@ -6,13 +6,22 @@ export interface ThoughtFragment {
   text: string;
   origin: ThoughtOrigin;
   status: 'original' | 'draft';
-  register: 'introspective' | 'challenging' | 'quiet' | 'dialectical' | 'constructive';
+  register:
+    | 'introspective'
+    | 'challenging'
+    | 'quiet'
+    | 'dialectical'
+    | 'constructive';
   accent: AccentTone;
-  spatialPresentation: 'monolith-wall' | 'opposing-planes' | 'horizon-beam' | 'still-chamber';
+  spatialPresentation:
+    | 'monolith-wall'
+    | 'opposing-planes'
+    | 'horizon-beam'
+    | 'still-chamber';
   pairedContradictionText?: string;
   stayWithThoughtQuestion: string;
   cameraShiftOffset: [number, number, number];
-  paradoxTarget: number;
+  foldTarget: number;
 }
 
 /**
@@ -31,7 +40,7 @@ export const MIKEY_ORIGINAL_THOUGHTS: ThoughtFragment[] = [
     stayWithThoughtQuestion:
       "What changes when you stop using someone else's worst moment as the measure of your own character?",
     cameraShiftOffset: [-1.4, 0.35, -1.1],
-    paradoxTarget: 0.14,
+    foldTarget: 0.16,
   },
   {
     id: 'mikey-family',
@@ -44,7 +53,7 @@ export const MIKEY_ORIGINAL_THOUGHTS: ThoughtFragment[] = [
     stayWithThoughtQuestion:
       'What makes a relationship feel like belonging rather than obligation?',
     cameraShiftOffset: [1.4, 0.25, -0.9],
-    paradoxTarget: 0.64,
+    foldTarget: 0.68,
   },
 ];
 
@@ -60,7 +69,7 @@ export const DRAFT_THOUGHT_FRAGMENTS: ThoughtFragment[] = [
     stayWithThoughtQuestion:
       'What are you still becoming, even if you cannot yet describe it?',
     cameraShiftOffset: [-0.8, 0.5, -0.6],
-    paradoxTarget: 0.42,
+    foldTarget: 0.42,
   },
   {
     id: 'draft-contradiction-protection',
@@ -75,7 +84,7 @@ export const DRAFT_THOUGHT_FRAGMENTS: ThoughtFragment[] = [
     stayWithThoughtQuestion:
       'When two of your own convictions disagree, what is each side trying to keep safe?',
     cameraShiftOffset: [0.0, 0.65, -1.4],
-    paradoxTarget: 0.82,
+    foldTarget: 0.84,
   },
   {
     id: 'draft-maturity-certainty',
@@ -90,7 +99,7 @@ export const DRAFT_THOUGHT_FRAGMENTS: ThoughtFragment[] = [
     stayWithThoughtQuestion:
       'Which of your current certainties would become stronger if you allowed yourself to question it?',
     cameraShiftOffset: [1.1, -0.2, -0.8],
-    paradoxTarget: 0.28,
+    foldTarget: 0.28,
   },
   {
     id: 'draft-connection-direction',
@@ -103,7 +112,7 @@ export const DRAFT_THOUGHT_FRAGMENTS: ThoughtFragment[] = [
     stayWithThoughtQuestion:
       'Can a chapter matter deeply without needing to last forever?',
     cameraShiftOffset: [-1.1, 0.15, -0.7],
-    paradoxTarget: 0.5,
+    foldTarget: 0.52,
   },
   {
     id: 'draft-idea-reality',
@@ -118,7 +127,7 @@ export const DRAFT_THOUGHT_FRAGMENTS: ThoughtFragment[] = [
     stayWithThoughtQuestion:
       'What survives when an idea leaves your head and meets the constraints of real construction?',
     cameraShiftOffset: [0.4, 0.4, -1.5],
-    paradoxTarget: 0.35,
+    foldTarget: 0.36,
   },
 ];
 

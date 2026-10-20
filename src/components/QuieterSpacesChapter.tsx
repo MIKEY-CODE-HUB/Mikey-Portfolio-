@@ -14,7 +14,7 @@ export interface QuieterSpacesChapterProps {
     accent: AccentTone | null;
     staying: boolean;
     cameraOffset: [number, number, number];
-    paradoxTarget: number;
+    foldTarget: number;
   }) => void;
   onContinueToWork: () => void;
 }
@@ -133,14 +133,14 @@ export const QuieterSpacesChapter: React.FC<QuieterSpacesChapterProps> = ({
         accent: fragment.accent,
         staying: true,
         cameraOffset: fragment.cameraShiftOffset,
-        paradoxTarget: fragment.paradoxTarget,
+        foldTarget: fragment.foldTarget,
       });
     } else {
       onThoughtFocusChange({
         accent: null,
         staying: false,
         cameraOffset: [0, 0, 0],
-        paradoxTarget: 0.45,
+        foldTarget: 0.48,
       });
     }
   };
@@ -155,7 +155,7 @@ export const QuieterSpacesChapter: React.FC<QuieterSpacesChapterProps> = ({
       accent: frag.accent,
       staying: isStaying,
       cameraOffset: frag.cameraShiftOffset,
-      paradoxTarget: frag.paradoxTarget,
+      foldTarget: frag.foldTarget,
     });
   };
 

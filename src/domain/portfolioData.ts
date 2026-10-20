@@ -5,18 +5,17 @@ export type RouteId =
   | 'work'
   | 'work-zenith'
   | 'work-deadzone'
-  | 'notes'
-  | 'contact';
+  | 'notes';
 
 export interface RouteSpec {
   id: RouteId;
   path: string;
   label: string;
-  scrollAnchor: number; // Normalized 0..1 world progress
-  chapterIndex: string;
+  scrollAnchor: number; // Normalized 0.0 -> 1.0 scroll progress
+  chapterNumber: string;
   chapterTitle: string;
-  epigraph: string;
   subtitle: string;
+  dominantAccent: 'cobalt' | 'amber' | 'dual';
 }
 
 export interface CameraKeyframe {
@@ -26,11 +25,19 @@ export interface CameraKeyframe {
   signatureScale: number;
   signatureRotation: [number, number, number];
   signaturePosition: [number, number, number];
-  paradoxSeparation: number;
-  wireframeMix: number;
-  gridElevation: number;
-  cobaltIntensity: number;
-  amberIntensity: number;
+  foldDepth: number; // 0 = nested threshold alignment, 1 = unfolded spatial planes & bridges
+  wireframeMix: number; // 0 = solid architectural mass, 1 = structural edge wireframe
+  gridElevation: number; // 0 = calm foundation, 1 = elevated architectural corridors
+  cobaltIntensity: number; // 0.0 -> 1.0 Electric Cobalt (#526BFF)
+  amberIntensity: number; // 0.0 -> 1.0 Warm Amber (#F0A65A)
+}
+
+export interface ProjectCaseStudy {
+  narrativeArc: string;
+  problemAndPurpose: string;
+  keySystemDecisions: string[];
+  whatWasBuilt: string[];
+  whyItMatters: string;
 }
 
 export interface ProjectRecord {
@@ -41,15 +48,12 @@ export interface ProjectRecord {
   title: string;
   category: string;
   liveUrl: string;
-  primaryActionLabel: string;
-  shortSummary: string;
-  coreIdea: string;
-  spatialRepresentation: string;
-  verifiedStatus: string;
-  verifiedCapabilities: string[];
-  architecturalNotes: string[];
-  visualMotif: 'concentric-focus' | 'tactical-bastion';
+  domain: string;
+  summary: string;
+  architectureNotes: string[];
+  spatialCoordinate: string;
   accentColor: 'cobalt' | 'amber';
+  caseStudy: ProjectCaseStudy;
 }
 
 export interface InterestCluster {
@@ -57,18 +61,9 @@ export interface InterestCluster {
   index: string;
   title: string;
   subtitle: string;
-  coordinate: string;
   areas: string[];
   reflection: string;
-}
-
-export interface MarginNote {
-  id: string;
-  title: string;
-  category: string;
-  date: string;
-  body: string;
-  isUserAdded?: boolean;
+  coordinate: string;
 }
 
 export interface ExternalProfile {
@@ -80,272 +75,327 @@ export interface ExternalProfile {
   ariaLabel: string;
 }
 
+export type SpatialTargetId = 'wordmark' | 'the-fold' | 'zenith' | 'deadzone-bastion';
+
+export interface SpatialInspectionTarget {
+  id: SpatialTargetId;
+  label: string;
+  coordinate: string;
+  title: string;
+  summary: string;
+  detail: string;
+  accent: 'cobalt' | 'amber';
+  actionLabel?: string;
+  actionPathOrUrl?: string;
+}
+
+export type ArchitecturalStatusCode =
+  | 'ENVIRONMENT SHIFTING'
+  | 'STRUCTURE DISCOVERED'
+  | 'VIEWPOINT UPDATED'
+  | 'ANOTHER LAYER'
+  | 'EXPLORATION AVAILABLE';
+
+export interface ArchitecturalStatusEvent {
+  id: string;
+  code: ArchitecturalStatusCode;
+  detail: string;
+  accent: 'cobalt' | 'amber';
+}
+
+export const SPATIAL_INSPECTION_TARGETS: Record<
+  SpatialTargetId,
+  SpatialInspectionTarget
+> = {
+  wordmark: {
+    id: 'wordmark',
+    label: '3D Monumental Wordmark · MIKEY',
+    coordinate: 'AXIS 00 · Y: +3.35 · Z: -1.60',
+    title: 'MIKEY — Identity Framed by The Fold',
+    summary:
+      'Constructed in three-dimensional bone-white stone and brushed steel with deliberate depth reliefs across each letterform, framed by the outer sanctuary arch.',
+    detail:
+      'The M recesses into an inverted vault; the I floats above a displaced shadow plinth; the K pierces a vertical datum; the E staggers its horizontal cantilevers across three Z-planes that align from the arrival threshold; the Y extends hairline vectors into the upper horizon.',
+    accent: 'cobalt',
+    actionLabel: 'Read Portrait (Chapter 02)',
+    actionPathOrUrl: '/about',
+  },
+  'the-fold': {
+    id: 'the-fold',
+    label: 'Signature Formation · THE FOLD',
+    coordinate: 'FOLD 01 · NESTED FRAMES · Z: -3.10',
+    title: 'The Fold — Space Bent Back Into Itself',
+    summary:
+      'An impossible architectural formation of nested monumental frames, hinged concrete planes, and a suspended bridge connecting foreground and distant chambers.',
+    detail:
+      'From the threshold, The Fold aligns into a coherent sanctuary portal. As the camera shifts or the structure unfolds, cantilevered planes hinge outward along an electric cobalt seam, exposing a narrow warm-amber aperture and a bridge spanning two contradictory depth layers.',
+    accent: 'amber',
+    actionLabel: 'Enter Quiet Spaces (Chapter 03)',
+    actionPathOrUrl: '/spaces',
+  },
+  zenith: {
+    id: 'zenith',
+    label: '3D Artifact 01 · ZENITH',
+    coordinate: 'SECTOR 04.A · X: -4.20 · Z: -2.40',
+    title: 'Zenith — Focus & Productivity Architecture',
+    summary:
+      'Cantilevered three-tier focus tower in bone-white stone and electric cobalt edge illumination.',
+    detail:
+      'Each ascending tier represents a layer of cognitive clarity: eliminating interface friction so intention and execution occupy a single uninterrupted workspace.',
+    accent: 'cobalt',
+    actionLabel: 'Open Zenith Case Study',
+    actionPathOrUrl: '/work/zenith',
+  },
+  'deadzone-bastion': {
+    id: 'deadzone-bastion',
+    label: '3D Artifact 02 · DEADZONE BASTION',
+    coordinate: 'SECTOR 04.B · X: +4.20 · Z: -2.40',
+    title: 'Deadzone Bastion — Tactical Defense Geometry',
+    summary:
+      'Interlocking hexagonal bastion perimeter with warm amber tactical scanning vectors.',
+    detail:
+      'Engineered to make spatial pressure, perimeter sightlines, and resource trade-offs immediately legible under real-time constraints.',
+    accent: 'amber',
+    actionLabel: 'Open Deadzone Case Study',
+    actionPathOrUrl: '/work/deadzone-bastion',
+  },
+};
+
 export const ROUTES: RouteSpec[] = [
   {
     id: 'home',
     path: '/',
     label: 'Threshold',
     scrollAnchor: 0.0,
-    chapterIndex: '01',
-    chapterTitle: 'THE THRESHOLD',
-    epigraph: 'Every world begins with an assumption.',
-    subtitle: 'Arrival & Monumental Installation',
+    chapterNumber: '01',
+    chapterTitle: 'The Threshold',
+    subtitle: 'Every world begins with an assumption.',
+    dominantAccent: 'cobalt',
   },
   {
     id: 'about',
     path: '/about',
     label: 'About',
-    scrollAnchor: 0.18,
-    chapterIndex: '02',
-    chapterTitle: 'THE UNFINISHED SELF',
-    epigraph: 'I am not a finished answer.',
-    subtitle: 'Still Becoming — Portrait in Paradox',
+    scrollAnchor: 0.24,
+    chapterNumber: '02',
+    chapterTitle: 'The Unfinished Self',
+    subtitle: 'I am not a finished answer.',
+    dominantAccent: 'amber',
   },
   {
     id: 'spaces',
     path: '/spaces',
     label: 'Quiet Spaces',
-    scrollAnchor: 0.38,
-    chapterIndex: '03',
-    chapterTitle: 'THE QUIETER SPACES BETWEEN STRUCTURES',
-    epigraph: 'Not everything meaningful needs to announce itself.',
-    subtitle: 'Spatial Reflections & Contradictions',
+    scrollAnchor: 0.48,
+    chapterNumber: '03',
+    chapterTitle: 'The Quieter Spaces Between Structures',
+    subtitle: 'Some thoughts do not ask to be solved. They ask to be noticed.',
+    dominantAccent: 'amber',
   },
   {
     id: 'work',
     path: '/work',
     label: 'Work',
-    scrollAnchor: 0.6,
-    chapterIndex: '04',
-    chapterTitle: 'THINGS MADE REAL',
-    epigraph: 'An idea changes when you attempt to build it.',
-    subtitle: 'Investigations & Built Artifacts',
+    scrollAnchor: 0.74,
+    chapterNumber: '04',
+    chapterTitle: 'Things Made Real',
+    subtitle: 'An idea changes the moment you try to build it.',
+    dominantAccent: 'cobalt',
   },
   {
     id: 'work-zenith',
     path: '/work/zenith',
     label: 'Zenith',
-    scrollAnchor: 0.63,
-    chapterIndex: '04.A',
-    chapterTitle: 'THINGS MADE REAL · ZENITH',
-    epigraph: 'Sustained attention protected by architectural boundaries.',
-    subtitle: 'Case Study · Focus & Accountability Platform',
+    scrollAnchor: 0.77,
+    chapterNumber: '04.1',
+    chapterTitle: 'Zenith — Case Study',
+    subtitle:
+      'Focus & Productivity Web Application — Engineered for Clarity Under Pressure',
+    dominantAccent: 'cobalt',
   },
   {
     id: 'work-deadzone',
     path: '/work/deadzone-bastion',
     label: 'Deadzone Bastion',
-    scrollAnchor: 0.66,
-    chapterIndex: '04.B',
-    chapterTitle: 'THINGS MADE REAL · DEADZONE BASTION',
-    epigraph: 'Every defensive structure is a hypothesis tested under pressure.',
-    subtitle: 'Case Study · Tactical Tower-Defense Game',
+    scrollAnchor: 0.81,
+    chapterNumber: '04.2',
+    chapterTitle: 'Deadzone Bastion — Case Study',
+    subtitle:
+      'Interactive Tactical & Survival Web Experience — Spatial Decision Systems',
+    dominantAccent: 'amber',
   },
   {
     id: 'notes',
     path: '/notes',
-    label: 'The Margin',
-    scrollAnchor: 0.82,
-    chapterIndex: '05',
-    chapterTitle: 'THE MARGIN',
-    epigraph: 'Some thoughts do not belong to a conclusion.',
-    subtitle: 'Areas of Exploration, Notebook & Synthesis',
-  },
-  {
-    id: 'contact',
-    path: '/contact',
-    label: 'Exit',
+    label: 'Explorations',
     scrollAnchor: 1.0,
-    chapterIndex: '06',
-    chapterTitle: 'THE EXIT THAT CONTINUES',
-    epigraph: 'You can leave a place without finishing what it made you think about.',
-    subtitle: 'Horizon & External Coordinates',
+    chapterNumber: '05',
+    chapterTitle: 'Explorations & Continue the Conversation',
+    subtitle:
+      'Directions of study, curiosity, and verified coordinates beyond this world.',
+    dominantAccent: 'dual',
   },
 ];
 
 export const SCENE_KEYFRAMES: Record<RouteId, CameraKeyframe> = {
   home: {
-    position: [0, 1.8, 12.5],
-    lookAt: [0, 1.2, 0],
-    fov: 42,
-    signatureScale: 1.15,
-    signatureRotation: [0.14, -0.42, 0.04],
-    signaturePosition: [0, 1.35, -1.2],
-    paradoxSeparation: 0.18,
-    wireframeMix: 0.12,
+    position: [0, 2.15, 12.2],
+    lookAt: [0, 2.2, -1.8],
+    fov: 40,
+    signatureScale: 0.94,
+    signatureRotation: [0.08, -0.32, 0.02],
+    signaturePosition: [0, 1.25, -3.2],
+    foldDepth: 0.14,
+    wireframeMix: 0.18,
     gridElevation: 0.0,
-    cobaltIntensity: 0.55,
-    amberIntensity: 0.12,
+    cobaltIntensity: 0.68,
+    amberIntensity: 0.24,
   },
   about: {
-    position: [-4.2, 2.35, 9.2],
-    lookAt: [-0.8, 1.4, -0.5],
+    position: [-4.2, 2.45, 9.6],
+    lookAt: [0.4, 1.65, -1.8],
     fov: 40,
-    signatureScale: 1.02,
-    signatureRotation: [0.38, 0.65, -0.18],
-    signaturePosition: [2.3, 1.55, -1.0],
-    paradoxSeparation: 0.62,
-    wireframeMix: 0.24,
-    gridElevation: 0.25,
-    cobaltIntensity: 0.28,
-    amberIntensity: 0.78,
-  },
-  spaces: {
-    position: [0.0, 2.6, 10.6],
-    lookAt: [0.0, 1.5, -1.4],
-    fov: 38,
-    signatureScale: 0.88,
-    signatureRotation: [0.08, 1.12, 0.02],
-    signaturePosition: [0.0, 1.75, -2.2],
-    paradoxSeparation: 0.45,
-    wireframeMix: 0.35,
-    gridElevation: 0.5,
-    cobaltIntensity: 0.48,
+    signatureScale: 1.08,
+    signatureRotation: [0.28, 0.64, -0.1],
+    signaturePosition: [2.1, 1.35, -2.0],
+    foldDepth: 0.62,
+    wireframeMix: 0.28,
+    gridElevation: 0.28,
+    cobaltIntensity: 0.35,
     amberIntensity: 0.85,
   },
+  spaces: {
+    position: [0.0, 2.55, 10.4],
+    lookAt: [0.0, 1.55, -2.2],
+    fov: 38,
+    signatureScale: 0.98,
+    signatureRotation: [0.06, 1.12, 0.02],
+    signaturePosition: [1.8, 1.5, -2.5],
+    foldDepth: 0.48,
+    wireframeMix: 0.38,
+    gridElevation: 0.52,
+    cobaltIntensity: 0.55,
+    amberIntensity: 0.88,
+  },
   work: {
-    position: [0.4, 3.2, 11.4],
-    lookAt: [0, 1.0, -2.5],
-    fov: 45,
-    signatureScale: 0.92,
-    signatureRotation: [0.22, 1.57, 0.0],
-    signaturePosition: [0, 2.2, -3.6],
-    paradoxSeparation: 0.35,
-    wireframeMix: 0.74,
-    gridElevation: 0.68,
+    position: [0.0, 3.1, 10.8],
+    lookAt: [0, 1.2, -2.6],
+    fov: 44,
+    signatureScale: 0.88,
+    signatureRotation: [0.18, 1.57, 0.0],
+    signaturePosition: [0, 2.25, -4.4],
+    foldDepth: 0.38,
+    wireframeMix: 0.72,
+    gridElevation: 0.74,
     cobaltIntensity: 0.92,
-    amberIntensity: 0.25,
+    amberIntensity: 0.45,
   },
   'work-zenith': {
-    position: [-3.8, 2.1, 7.4],
-    lookAt: [-2.6, 1.2, -2.2],
+    position: [-3.6, 2.15, 6.8],
+    lookAt: [-3.2, 1.25, -2.4],
     fov: 38,
     signatureScale: 0.78,
     signatureRotation: [0.1, 1.1, 0.05],
-    signaturePosition: [1.4, 2.4, -4.4],
-    paradoxSeparation: 0.12,
+    signaturePosition: [1.4, 2.35, -4.6],
+    foldDepth: 0.18,
     wireframeMix: 0.48,
-    gridElevation: 0.72,
-    cobaltIntensity: 0.88,
-    amberIntensity: 0.35,
+    gridElevation: 0.76,
+    cobaltIntensity: 0.95,
+    amberIntensity: 0.3,
   },
   'work-deadzone': {
-    position: [3.8, 2.3, 7.4],
-    lookAt: [2.6, 1.2, -2.2],
+    position: [3.6, 2.25, 6.8],
+    lookAt: [3.2, 1.25, -2.4],
     fov: 38,
     signatureScale: 0.78,
-    signatureRotation: [0.32, 2.05, -0.12],
-    signaturePosition: [-1.4, 2.4, -4.4],
-    paradoxSeparation: 0.48,
+    signatureRotation: [0.28, 2.05, -0.1],
+    signaturePosition: [-1.4, 2.35, -4.6],
+    foldDepth: 0.54,
     wireframeMix: 0.82,
-    gridElevation: 0.78,
-    cobaltIntensity: 0.42,
-    amberIntensity: 0.88,
+    gridElevation: 0.82,
+    cobaltIntensity: 0.38,
+    amberIntensity: 0.95,
   },
   notes: {
-    position: [3.4, 3.8, 10.2],
-    lookAt: [0.5, 1.6, -1.2],
-    fov: 43,
-    signatureScale: 0.88,
-    signatureRotation: [0.52, 2.45, 0.24],
-    signaturePosition: [-2.4, 1.8, -1.8],
-    paradoxSeparation: 0.72,
-    wireframeMix: 0.52,
-    gridElevation: 0.88,
-    cobaltIntensity: 0.62,
-    amberIntensity: 0.58,
-  },
-  contact: {
-    position: [0, 1.6, 9.6],
-    lookAt: [0, 1.2, 0],
-    fov: 38,
-    signatureScale: 0.72,
-    signatureRotation: [0.0, 0.785, 0.0],
-    signaturePosition: [0, 1.3, -0.8],
-    paradoxSeparation: 0.0,
-    wireframeMix: 0.18,
-    gridElevation: 1.0,
-    cobaltIntensity: 0.68,
-    amberIntensity: 0.68,
+    position: [2.8, 3.15, 9.6],
+    lookAt: [0.0, 1.65, -2.4],
+    fov: 41,
+    signatureScale: 0.94,
+    signatureRotation: [0.34, 2.15, 0.14],
+    signaturePosition: [-1.8, 1.65, -2.6],
+    foldDepth: 0.78,
+    wireframeMix: 0.46,
+    gridElevation: 0.92,
+    cobaltIntensity: 0.74,
+    amberIntensity: 0.74,
   },
 };
 
 export function resolveRouteFromPath(pathname: string): RouteSpec {
-  const clean = pathname.replace(/\/+$/, '') || '/';
-  const match = ROUTES.find((r) => r.path.toLowerCase() === clean.toLowerCase());
+  const clean = pathname.replace(/\/+$/, '').toLowerCase() || '/';
+  // Gracefully map legacy /contact or /afterword paths to Chapter 05 where "Continue the Conversation" lives
+  if (clean === '/contact' || clean === '/afterword') {
+    return ROUTES.find((r) => r.id === 'notes')!;
+  }
+  const match = ROUTES.find((r) => r.path.toLowerCase() === clean);
   return match || ROUTES[0];
 }
 
 export function resolveRouteFromScroll(progress: number): RouteSpec {
   const clamped = Math.max(0, Math.min(1, progress));
-  const primaryRoutes = ROUTES.filter((r) => !r.id.startsWith('work-'));
+  const primaryRoutes = ROUTES.filter(
+    (r) => r.id !== 'work-zenith' && r.id !== 'work-deadzone'
+  );
   let closest = primaryRoutes[0];
-  let minDiff = Math.abs(clamped - closest.scrollAnchor);
+  let minDistance = Math.abs(clamped - closest.scrollAnchor);
 
   for (const route of primaryRoutes) {
-    const diff = Math.abs(clamped - route.scrollAnchor);
-    if (diff < minDiff) {
-      minDiff = diff;
+    const dist = Math.abs(clamped - route.scrollAnchor);
+    if (dist < minDistance) {
+      minDistance = dist;
       closest = route;
     }
   }
   return closest;
 }
 
-export function lerpNumber(a: number, b: number, t: number): number {
+export function interpolateKeyframes(
+  a: CameraKeyframe,
+  b: CameraKeyframe,
+  t: number
+): CameraKeyframe {
   const clamped = Math.max(0, Math.min(1, t));
-  return a + (b - a) * clamped;
-}
-
-export function dampValue(current: number, target: number, lambda: number, dt: number): number {
-  if (dt <= 0) return current;
-  return lerpNumber(current, target, 1 - Math.exp(-lambda * dt));
-}
-
-export function interpolateKeyframes(a: CameraKeyframe, b: CameraKeyframe, t: number): CameraKeyframe {
-  const k = Math.max(0, Math.min(1, t));
+  const lerp = (x: number, y: number) => x + (y - x) * clamped;
   return {
     position: [
-      lerpNumber(a.position[0], b.position[0], k),
-      lerpNumber(a.position[1], b.position[1], k),
-      lerpNumber(a.position[2], b.position[2], k),
+      lerp(a.position[0], b.position[0]),
+      lerp(a.position[1], b.position[1]),
+      lerp(a.position[2], b.position[2]),
     ],
     lookAt: [
-      lerpNumber(a.lookAt[0], b.lookAt[0], k),
-      lerpNumber(a.lookAt[1], b.lookAt[1], k),
-      lerpNumber(a.lookAt[2], b.lookAt[2], k),
+      lerp(a.lookAt[0], b.lookAt[0]),
+      lerp(a.lookAt[1], b.lookAt[1]),
+      lerp(a.lookAt[2], b.lookAt[2]),
     ],
-    fov: lerpNumber(a.fov, b.fov, k),
-    signatureScale: lerpNumber(a.signatureScale, b.signatureScale, k),
+    fov: lerp(a.fov, b.fov),
+    signatureScale: lerp(a.signatureScale, b.signatureScale),
     signatureRotation: [
-      lerpNumber(a.signatureRotation[0], b.signatureRotation[0], k),
-      lerpNumber(a.signatureRotation[1], b.signatureRotation[1], k),
-      lerpNumber(a.signatureRotation[2], b.signatureRotation[2], k),
+      lerp(a.signatureRotation[0], b.signatureRotation[0]),
+      lerp(a.signatureRotation[1], b.signatureRotation[1]),
+      lerp(a.signatureRotation[2], b.signatureRotation[2]),
     ],
     signaturePosition: [
-      lerpNumber(a.signaturePosition[0], b.signaturePosition[0], k),
-      lerpNumber(a.signaturePosition[1], b.signaturePosition[1], k),
-      lerpNumber(a.signaturePosition[2], b.signaturePosition[2], k),
+      lerp(a.signaturePosition[0], b.signaturePosition[0]),
+      lerp(a.signaturePosition[1], b.signaturePosition[1]),
+      lerp(a.signaturePosition[2], b.signaturePosition[2]),
     ],
-    paradoxSeparation: lerpNumber(a.paradoxSeparation, b.paradoxSeparation, k),
-    wireframeMix: lerpNumber(a.wireframeMix, b.wireframeMix, k),
-    gridElevation: lerpNumber(a.gridElevation, b.gridElevation, k),
-    cobaltIntensity: lerpNumber(a.cobaltIntensity, b.cobaltIntensity, k),
-    amberIntensity: lerpNumber(a.amberIntensity, b.amberIntensity, k),
+    foldDepth: lerp(a.foldDepth, b.foldDepth),
+    wireframeMix: lerp(a.wireframeMix, b.wireframeMix),
+    gridElevation: lerp(a.gridElevation, b.gridElevation),
+    cobaltIntensity: lerp(a.cobaltIntensity, b.cobaltIntensity),
+    amberIntensity: lerp(a.amberIntensity, b.amberIntensity),
   };
 }
-
-export const ABOUT_PARAGRAPHS: string[] = [
-  'Still becoming.',
-  "I'm MIKEY.",
-  "I'm studying computer science, building software, and figuring out what I'm capable of along the way.",
-  'I like learning how things work. I like taking an idea that exists only in my head and seeing what survives when I try to build it.',
-  "I'm interested in the space where logic meets imagination, where a question becomes an experiment, and where the result doesn't always match the original idea.",
-  "I don't want to fit neatly into one category. I'm interested in exploring different ideas without pretending they all lead to the same destination.",
-  "I'm working towards becoming a stronger engineer, understanding difficult ideas more deeply, and building things that are useful, technically sound, and interesting to experience.",
-  "I'm not presenting those ambitions as accomplishments. They're directions I'm working towards.",
-  "This isn't a finished definition of me. It's a record of what I'm exploring.",
-];
 
 export const PROJECTS: ProjectRecord[] = [
   {
@@ -354,29 +404,35 @@ export const PROJECTS: ProjectRecord[] = [
     path: '/work/zenith',
     index: '01',
     title: 'Zenith',
-    category: 'Focus & Accountability Platform',
+    category: 'Focus & Productivity Web Application',
     liveUrl: 'https://zenith-dusky-theta.vercel.app/',
-    primaryActionLabel: 'Explore Zenith',
-    shortSummary:
-      'A focus and accountability platform exploring deep work, concentration, distraction protection, and ambient study experiences.',
-    coreIdea:
-      'Sustained attention is fragile in modern digital environments. Zenith is a real attempt to turn ideas about focus, temporal boundaries, and quiet shared presence into a functional product without gamified noise.',
-    spatialRepresentation:
-      'Represented spatially through concentric temporal rings, calibrated boundary planes, and an unobstructed central locus of attention highlighted by a subtle electric cobalt datum.',
-    verifiedStatus: 'Live Web Deployment (Vercel)',
-    verifiedCapabilities: [
-      'Deep work session framing & temporal boundaries',
-      'Silent coworking & shared accountability direction',
-      'Distraction protection & environmental focus controls',
-      'Ambient study atmosphere design',
+    domain: 'zenith-dusky-theta.vercel.app',
+    summary:
+      'An intentional workspace designed around cognitive clarity, task structuring, and distraction-free execution. Built to examine how software interfaces shape sustained human attention.',
+    architectureNotes: [
+      'Structured around low-friction state transitions so planning and active focus happen in a single unified flow.',
+      'Designed with high-contrast visual hierarchy to reduce cognitive overhead during deep-work sessions.',
+      'Deployed as a fast, responsive web application on Vercel.',
     ],
-    architecturalNotes: [
-      'Designed around reducing cognitive friction before and during concentration blocks.',
-      'Balances personal autonomy with subtle structural accountability.',
-      'Ongoing exploration: refining session state continuity and ambient environment controls.',
-    ],
-    visualMotif: 'concentric-focus',
+    spatialCoordinate: 'SECTOR 04.A · ELEVATION +2.15 · COBALT AXIS',
     accentColor: 'cobalt',
+    caseStudy: {
+      narrativeArc:
+        'Most productivity tools multiply the number of surfaces demanding attention. Zenith began with the opposite premise: what happens to focus when an interface removes everything that is not the immediate commitment?',
+      problemAndPurpose:
+        'Examining how digital workspaces fragment human concentration—and engineering a calm, responsive environment where task sequencing and deep execution coexist without visual clutter.',
+      keySystemDecisions: [
+        'Single-plane state transitions between planning and active execution so context is never lost across modal layers.',
+        'Restrained typographic hierarchy and high-contrast visual cues that remain legible during extended work sessions.',
+        'Zero-latency client-side state responsiveness to keep keyboard and pointer interactions immediate.',
+      ],
+      whatWasBuilt: [
+        'A live web application deployed on Vercel focused on intentional task prioritization and distraction-free execution.',
+        'Streamlined session and task controls designed to minimize interface ceremony.',
+      ],
+      whyItMatters:
+        'Zenith is an inquiry into attention: proving that software can respect human thought by doing less, more clearly.',
+    },
   },
   {
     id: 'deadzone-bastion',
@@ -384,108 +440,95 @@ export const PROJECTS: ProjectRecord[] = [
     path: '/work/deadzone-bastion',
     index: '02',
     title: 'Deadzone Bastion',
-    category: 'Tactical Zombie Tower-Defense Game',
+    category: 'Interactive Tactical & Survival Web Experience',
     liveUrl: 'https://deadzone-bastion.vercel.app/',
-    primaryActionLabel: 'Explore Deadzone Bastion',
-    shortSummary:
-      'A tactical zombie tower-defense game exploring spatial perimeter control, resource pressure, and layered defensive decision-making.',
-    coreIdea:
-      'Every defensive structure is a hypothesis tested under wave pressure. Deadzone Bastion investigates how clear tactical geometry and real-time trade-offs create tension in a contained environment.',
-    spatialRepresentation:
-      'Represented spatially through interlocking defensive chevrons, sightline vectors, and a fortified central bastion under converging pressure.',
-    verifiedStatus: 'Live Web Deployment (Vercel)',
-    verifiedCapabilities: [
-      'Tactical tower-defense perimeter layout',
-      'Wave-based survival pressure in a contained arena',
-      'Real-time placement and defensive line management',
-      'Browser-native interactive deployment',
+    domain: 'deadzone-bastion.vercel.app',
+    summary:
+      'A systems-driven interactive web experience exploring defensive strategy, resource tension, and spatial decision-making under dynamic pressure.',
+    architectureNotes: [
+      'Models real-time state updates, perimeter defense logic, and tactical trade-offs in the browser.',
+      'Balances immediate visual feedback with underlying deterministic game-loop mechanics.',
+      'Built and deployed on Vercel for instant browser accessibility.',
     ],
-    architecturalNotes: [
-      'Acts as a narrative counterpoint to Zenith: where Zenith protects interior stillness, Deadzone Bastion tests structure against active external uncertainty.',
-      'Built to explore state updates, target prioritization, and responsive browser rendering.',
-      'Additional technical specifications remain open for future documentation as the project evolves.',
-    ],
-    visualMotif: 'tactical-bastion',
+    spatialCoordinate: 'SECTOR 04.B · ELEVATION +2.25 · AMBER AXIS',
     accentColor: 'amber',
+    caseStudy: {
+      narrativeArc:
+        'Where Zenith studies calm and stillness, Deadzone Bastion studies pressure: how a player reads space, scarcity, and escalating risk when every decision carries an immediate structural cost.',
+      problemAndPurpose:
+        'Designing a browser-based tactical experience where defensive positioning, resource allocation, and spatial awareness remain legible even as pressure compounds.',
+      keySystemDecisions: [
+        'Deterministic update loop separating simulation state from visual feedback so tactical trade-offs feel fair and readable.',
+        'Clear spatial perimeter geometry that communicates threat vectors and defensive coverage at a glance.',
+        'Immediate browser deployment with zero installation barrier.',
+      ],
+      whatWasBuilt: [
+        'An interactive tactical survival web application live on Vercel.',
+        'Real-time perimeter defense, resource tension mechanics, and responsive tactical controls.',
+      ],
+      whyItMatters:
+        'Deadzone Bastion turns abstract algorithmic rules and state machines into a tangible spatial experience under pressure.',
+    },
   },
 ];
 
 export const INTEREST_CLUSTERS: InterestCluster[] = [
   {
-    id: 'systems-engineering',
-    index: 'I',
-    title: 'Software Engineering & Systems',
-    subtitle: 'Turning abstract models into working software',
-    coordinate: 'X: -14.2 · Z: +08.4',
+    id: 'computation',
+    index: '01',
+    title: 'Computer Science & Systems',
+    subtitle: 'Foundational Architecture',
     areas: [
-      'Software engineering and full-stack development',
-      'Python and JavaScript',
-      'React.js, Node.js, and Express.js',
-      'AI and machine learning',
-      'Competitive programming and algorithms',
+      'Computer Science Fundamentals',
+      'Software Engineering & System Design',
+      'Algorithms & Data Structures',
+      'AI / Machine Learning Exploration',
     ],
     reflection:
-      'Approached as an ongoing craft of translating ideas into reliable code, studying algorithmic trade-offs, and understanding what happens beneath high-level abstractions.',
+      'Approaching code not merely as syntax, but as a way of modeling how information moves, scales, and holds together under constraint.',
+    coordinate: 'AXIS N.01',
   },
   {
-    id: 'quantitative-math',
-    index: 'II',
-    title: 'Mathematics & Quantitative Reasoning',
-    subtitle: 'Formal structures, uncertainty, and state spaces',
-    coordinate: 'X: +11.8 · Z: +04.1',
+    id: 'quantitative',
+    index: '02',
+    title: 'Quantitative & Analytical',
+    subtitle: 'Patterns & Uncertainty',
     areas: [
-      'Quantitative finance',
-      'Probability and statistics',
-      'Linear algebra',
-      'Calculus',
+      'Quantitative Thinking & Probability',
+      'Economics & Market Behavior',
+      'Strategic Decision-Making Under Uncertainty',
     ],
     reflection:
-      'Exploring how mathematical language models uncertainty, multidimensional transformations, and continuous change.',
+      'Studying how incentives, probability, and incomplete information shape decisions in complex systems.',
+    coordinate: 'AXIS E.02',
   },
   {
-    id: 'philosophy-humanities',
-    index: 'III',
-    title: 'Philosophy, Mind & Literature',
-    subtitle: 'What formal systems leave out',
-    coordinate: 'X: -09.6 · Z: -12.0',
+    id: 'humanities',
+    index: '03',
+    title: 'Humanities & Mind',
+    subtitle: 'Perception & Meaning',
     areas: [
-      'Philosophy and psychology',
-      'Literature and poetry',
-      'Politics and deep conversations',
+      'Philosophy & Epistemology',
+      'Psychology & Human Behavior',
+      'Literature & Narrative Structure',
     ],
     reflection:
       'Examining human contradiction, perception, language, and ethical questions that resist purely mechanical answers.',
+    coordinate: 'AXIS S.03',
   },
   {
-    id: 'strategy-culture',
-    index: 'IV',
-    title: 'Strategy, Play & Narrative Worlds',
-    subtitle: 'Finite rules and imaginative exploration',
-    coordinate: 'X: +15.0 · Z: -09.5',
+    id: 'play-motion',
+    index: '04',
+    title: 'Strategy, Motion & Visual Worlds',
+    subtitle: 'Tempo, Discipline & Form',
     areas: [
-      'Chess and Sudoku',
-      'Cricket and other sports',
-      'Reading books, watching movies, and anime',
+      'Chess — Positional Calculation & Tempo',
+      'Basketball — Spatial Awareness & Flow',
+      'Movies & Anime — Visual Storytelling & Worldbuilding',
     ],
     reflection:
       'Finding balance between combinatorial board strategy, team athletics, and long-form storytelling.',
-  },
-];
-
-export const INITIAL_MARGIN_NOTES: MarginNote[] = [
-  {
-    id: 'margin-paradox',
-    title: 'On Contradiction as Structure',
-    category: 'Architectural Direction',
-    date: 'Margin Entry · 01',
-    body: 'My contradictions aren’t flaws I need to resolve. Being drawn simultaneously to deterministic algorithms and open-ended poetry creates a wider frame of reference than either discipline alone.',
-  },
-  {
-    id: 'margin-understanding',
-    title: 'Building vs. Exploring',
-    category: 'Working Principle',
-    date: 'Margin Entry · 02',
-    body: 'I build to understand. I explore to find what understanding misses. Construction tests whether an idea holds together; exploration reveals the assumptions that construction took for granted.',
+    coordinate: 'AXIS W.04',
   },
 ];
 
@@ -504,7 +547,7 @@ export const EXTERNAL_PROFILES: ExternalProfile[] = [
     handle: 'MIKEY-CODE-HUB',
     domain: 'github.com',
     url: 'https://github.com/MIKEY-CODE-HUB',
-    ariaLabel: 'Visit MIKEY-CODE-HUB on GitHub',
+    ariaLabel: 'Visit MIKEY (MIKEY-CODE-HUB) on GitHub',
   },
   {
     id: 'codeforces',
@@ -512,32 +555,28 @@ export const EXTERNAL_PROFILES: ExternalProfile[] = [
     handle: 'MIKEY1903',
     domain: 'codeforces.com',
     url: 'https://codeforces.com/profile/MIKEY1903',
-    ariaLabel: 'Visit MIKEY1903 profile on Codeforces',
+    ariaLabel: 'Visit MIKEY (MIKEY1903) on Codeforces',
   },
   {
     id: 'instagram',
     label: 'Instagram',
     handle: '@the__harshit_shukla',
     domain: 'instagram.com',
-    url: 'https://www.instagram.com/the__harshit_shukla/?__pwa=1',
-    ariaLabel: 'Visit @the__harshit_shukla on Instagram',
+    url: 'https://www.instagram.com/the__harshit_shukla/',
+    ariaLabel: 'Visit MIKEY (@the__harshit_shukla) on Instagram',
   },
   {
     id: 'spotify',
     label: 'Spotify',
-    handle: 'MIKEY Audio Profile',
+    handle: 'MIKEY · Soundscapes',
     domain: 'open.spotify.com',
     url: 'https://open.spotify.com/user/iw0dm14kexc8oatemiwymcqa9',
-    ariaLabel: 'Listen to MIKEY on Spotify',
+    ariaLabel: 'Visit MIKEY on Spotify',
   },
 ];
 
-export function filterInterestsByCluster(
-  clusters: InterestCluster[],
-  selectedClusterId: string
-): InterestCluster[] {
-  if (!selectedClusterId || selectedClusterId === 'all') {
-    return clusters;
-  }
-  return clusters.filter((c) => c.id === selectedClusterId);
-}
+export const ABOUT_PARAGRAPHS: string[] = [
+  'MIKEY is the public identity of a computer science student, builder, and perpetual learner who treats software and ideas as two sides of the same inquiry. Rather than viewing engineering as separate from philosophy or art, I am drawn to the places where logical systems meet human complexity.',
+  'My current focus lies in understanding how things work from first principles—computer science, software engineering, algorithms, and AI/ML—while exploring quantitative thinking, economics, philosophy, psychology, and literature. Away from the terminal, I spend time studying chess positions, playing basketball, and immersing myself in films and anime that build unforgettable worlds.',
+  'This space is not a static resume of finished certainties. It is an evolving architectural record of what I am building, questioning, and learning next.',
+];
