@@ -30,7 +30,14 @@ export const TopBar: React.FC<TopBarProps> = ({
   onNavigate,
   onJumpToContinueConversation,
 }) => {
-  const navIds: RouteId[] = ['home', 'about', 'spaces', 'work', 'notes'];
+  const navIds: RouteId[] = [
+    'home',
+    'about',
+    'spaces',
+    'work',
+    'notes',
+    'social',
+  ];
   const primaryNavRoutes = ROUTES.filter((r) => navIds.includes(r.id));
 
   const handleLinkClick = (
@@ -54,7 +61,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <header className="fixed top-0 left-0 right-0 z-30 bg-[#111210]/94 border-b border-[#454642]/60">
-      <div className="flex items-center justify-between gap-6 px-6 md:px-10 py-3.5">
+      <div className="flex items-center justify-between gap-4 px-6 md:px-10 py-3.5">
         {/* Zone 1: Custom MIKEY Architectural Glyph + Brand Wordmark */}
         <div className="flex items-center gap-3 shrink-0">
           <MikeyGlyph
@@ -73,10 +80,10 @@ export const TopBar: React.FC<TopBarProps> = ({
           </a>
         </div>
 
-        {/* Zone 2: 5 Responsive Chapter Navigation Items with Chapter Index & Active State */}
+        {/* Zone 2: 6 Responsive Chapter Navigation Items with Chapter Index & Active State */}
         <nav
           aria-label="Primary spatial destinations"
-          className="flex items-center gap-4 sm:gap-7 overflow-x-auto no-scrollbar text-xs sm:text-sm font-medium"
+          className="flex items-center gap-3.5 sm:gap-6 overflow-x-auto no-scrollbar text-xs sm:text-sm font-medium"
         >
           {primaryNavRoutes.map((route) => {
             const isActive =
@@ -116,17 +123,17 @@ export const TopBar: React.FC<TopBarProps> = ({
         </nav>
 
         {/* Zone 3: Primary Action — Continue the Conversation */}
-        <div className="hidden sm:flex items-center shrink-0">
+        <div className="hidden lg:flex items-center shrink-0">
           <button
             type="button"
             onClick={
-              activeRouteId === 'notes'
+              activeRouteId === 'social'
                 ? () => onNavigate('/work')
                 : onJumpToContinueConversation
             }
             className="px-4 py-2 text-xs font-medium text-[#111210] bg-[#E9E5DA] hover:bg-[#F8F7F2] active:scale-[0.99] transition-all whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F8F7F2]"
           >
-            {activeRouteId === 'notes'
+            {activeRouteId === 'social'
               ? 'Explore Built Work'
               : 'Continue the Conversation'}
           </button>

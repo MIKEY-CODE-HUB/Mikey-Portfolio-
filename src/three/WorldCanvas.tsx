@@ -1458,8 +1458,8 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
         </div>
       )}
 
-      {/* Brief first-visit contextual hint that disappears once visitor interacts */}
-      {showExploreHint && !showResetButton && (
+      {/* Brief first-visit contextual hint that disappears once visitor interacts or scrolls into reading sections */}
+      {showExploreHint && !showResetButton && scrollProgress < 0.04 && (
         <div
           data-testid="explore-hint"
           className="fixed bottom-3.5 right-6 z-30 pointer-events-none bg-[#161715]/95 border border-[#454642]/80 px-3 py-1 text-[11px] font-mono-tech text-[#E9E5DA] flex items-center gap-2 transition-opacity duration-500"

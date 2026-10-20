@@ -5,7 +5,8 @@ export type RouteId =
   | 'work'
   | 'work-zenith'
   | 'work-deadzone'
-  | 'notes';
+  | 'notes'
+  | 'social';
 
 export interface RouteSpec {
   id: RouteId;
@@ -175,18 +176,19 @@ export const ROUTES: RouteSpec[] = [
   {
     id: 'about',
     path: '/about',
-    label: 'About',
-    scrollAnchor: 0.24,
+    label: 'Introduction',
+    scrollAnchor: 0.18,
     chapterNumber: '02',
-    chapterTitle: 'The Unfinished Self',
-    subtitle: 'I am not a finished answer.',
+    chapterTitle: "I'm MIKEY.",
+    subtitle:
+      'Still becoming. I build to understand. I explore to find what understanding misses.',
     dominantAccent: 'amber',
   },
   {
     id: 'spaces',
     path: '/spaces',
     label: 'Quiet Spaces',
-    scrollAnchor: 0.48,
+    scrollAnchor: 0.42,
     chapterNumber: '03',
     chapterTitle: 'The Quieter Spaces Between Structures',
     subtitle: 'Some thoughts do not ask to be solved. They ask to be noticed.',
@@ -196,7 +198,7 @@ export const ROUTES: RouteSpec[] = [
     id: 'work',
     path: '/work',
     label: 'Work',
-    scrollAnchor: 0.74,
+    scrollAnchor: 0.66,
     chapterNumber: '04',
     chapterTitle: 'Things Made Real',
     subtitle: 'An idea changes the moment you try to build it.',
@@ -206,7 +208,7 @@ export const ROUTES: RouteSpec[] = [
     id: 'work-zenith',
     path: '/work/zenith',
     label: 'Zenith',
-    scrollAnchor: 0.77,
+    scrollAnchor: 0.69,
     chapterNumber: '04.1',
     chapterTitle: 'Zenith — Case Study',
     subtitle:
@@ -217,7 +219,7 @@ export const ROUTES: RouteSpec[] = [
     id: 'work-deadzone',
     path: '/work/deadzone-bastion',
     label: 'Deadzone Bastion',
-    scrollAnchor: 0.81,
+    scrollAnchor: 0.72,
     chapterNumber: '04.2',
     chapterTitle: 'Deadzone Bastion — Case Study',
     subtitle:
@@ -227,13 +229,24 @@ export const ROUTES: RouteSpec[] = [
   {
     id: 'notes',
     path: '/notes',
-    label: 'Explorations',
-    scrollAnchor: 1.0,
+    label: 'Attached',
+    scrollAnchor: 0.85,
     chapterNumber: '05',
-    chapterTitle: 'Explorations & Continue the Conversation',
+    chapterTitle: 'Explorations — The Unattached',
     subtitle:
-      'Directions of study, curiosity, and verified coordinates beyond this world.',
-    dominantAccent: 'dual',
+      'Directions of study, problem-solving, and ongoing curiosity across disciplines.',
+    dominantAccent: 'amber',
+  },
+  {
+    id: 'social',
+    path: '/social',
+    label: 'Social Links',
+    scrollAnchor: 1.0,
+    chapterNumber: '06',
+    chapterTitle: 'Continue the Conversation',
+    subtitle:
+      'Verified external profiles and direct coordinates to continue the conversation.',
+    dominantAccent: 'cobalt',
   },
 ];
 
@@ -329,13 +342,25 @@ export const SCENE_KEYFRAMES: Record<RouteId, CameraKeyframe> = {
     cobaltIntensity: 0.74,
     amberIntensity: 0.74,
   },
+  social: {
+    position: [0.0, 2.85, 10.2],
+    lookAt: [0.0, 1.85, -2.2],
+    fov: 40,
+    signatureScale: 0.96,
+    signatureRotation: [0.16, 2.65, 0.06],
+    signaturePosition: [0.0, 1.55, -2.8],
+    foldDepth: 0.88,
+    wireframeMix: 0.34,
+    gridElevation: 0.96,
+    cobaltIntensity: 0.82,
+    amberIntensity: 0.68,
+  },
 };
 
 export function resolveRouteFromPath(pathname: string): RouteSpec {
   const clean = pathname.replace(/\/+$/, '').toLowerCase() || '/';
-  // Gracefully map legacy /contact or /afterword paths to Chapter 05 where "Continue the Conversation" lives
-  if (clean === '/contact' || clean === '/afterword') {
-    return ROUTES.find((r) => r.id === 'notes')!;
+  if (clean === '/contact' || clean === '/afterword' || clean === '/social' || clean === '/links') {
+    return ROUTES.find((r) => r.id === 'social')!;
   }
   const match = ROUTES.find((r) => r.path.toLowerCase() === clean);
   return match || ROUTES[0];
@@ -523,7 +548,7 @@ export const INTEREST_CLUSTERS: InterestCluster[] = [
     subtitle: 'Tempo, Discipline & Form',
     areas: [
       'Chess — Positional Calculation & Tempo',
-      'Basketball — Spatial Awareness & Flow',
+      'Cricket — Spatial Awareness & Flow',
       'Movies & Anime — Visual Storytelling & Worldbuilding',
     ],
     reflection:
@@ -575,8 +600,26 @@ export const EXTERNAL_PROFILES: ExternalProfile[] = [
   },
 ];
 
+export interface ApprovedIntroduction {
+  title: string;
+  italicLead: string;
+  paragraphs: [string, string, string];
+  closingStatement: string;
+}
+
+export const APPROVED_INTRODUCTION: ApprovedIntroduction = {
+  title: "I'm MIKEY.",
+  italicLead:
+    'Still becoming. I build to understand. I explore to find what understanding misses.',
+  paragraphs: [
+    "I'm a Computer Science student at Newton School of Technology, S-VYASA, Bengaluru, drawn to the space between logic and imagination, structure and uncertainty, and the things we know and the questions we haven't learned to ask yet. I enjoy learning how things work, building things of my own, exploring unfamiliar ideas, and looking at the same question from perspectives that don't always agree. My interests move between technology, mathematics, philosophy, psychology, literature, and the countless connections that emerge when different ways of thinking meet.",
+    "Beyond the technical side, I'm interested in people, the way they think, the stories they tell, and the assumptions that shape how we see the world. Whether it's through a book, a game of chess, a difficult problem, or a conversation that goes somewhere unexpected, I'm always looking for something new to understand. I'm also a member of my institution's Placement Cell in my second year, an opportunity to engage with another side of campus life beyond my own learning and projects.",
+    "I don't have everything figured out, and I don't feel the need to force myself into a single category. I'm interested in too many questions to settle on one perspective, and I'd rather keep exploring than pretend to have arrived. For me, building is a way to turn curiosity into something tangible; learning is a way to challenge what I think I know.",
+  ],
+  closingStatement:
+    "My contradictions aren't flaws I need to resolve. They're part of the person I'm still becoming.",
+};
+
 export const ABOUT_PARAGRAPHS: string[] = [
-  'MIKEY is the public identity of a computer science student, builder, and perpetual learner who treats software and ideas as two sides of the same inquiry. Rather than viewing engineering as separate from philosophy or art, I am drawn to the places where logical systems meet human complexity.',
-  'My current focus lies in understanding how things work from first principles—computer science, software engineering, algorithms, and AI/ML—while exploring quantitative thinking, economics, philosophy, psychology, and literature. Away from the terminal, I spend time studying chess positions, playing basketball, and immersing myself in films and anime that build unforgettable worlds.',
-  'This space is not a static resume of finished certainties. It is an evolving architectural record of what I am building, questioning, and learning next.',
+  ...APPROVED_INTRODUCTION.paragraphs,
 ];
